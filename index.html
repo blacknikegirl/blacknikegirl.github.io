@@ -1,12 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="et">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="styles.css">
-    <title>Document</title>
+  <meta charset="utf-8">
+  <title>Minu digikangelane</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <h1>Tuleb varsti</h1>
+<header>
+  <nav>
+    <div class="brand">Digikangelane</div>
+    <ul class="menu">
+      <li><a href="#about">Minust</a></li>
+      <li><a href="#skills">Oskused</a></li>
+      <li><a href="#works">Tööd</a></li>
+    </ul>
+    <a class="cta" href="#start">Alusta</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div>
+      <h1 class="title">Ehitan ilusaid, mis tunduvad kiired</h1>
+      <p class="subtitle">HTML, CSS ja natukene julget mõistust.</p>
+
+      <div class="actions">
+        <a class="cta" href="#works">Vaata töid</a>
+        <a class="ghost" href="#contact">Võta ühendust</a>
+      </div>
+    </div>
+
+    <article class="card profile" id="about">
+        <img class="avatar" src="https://cdn.pixabay.com/photo/2018/05/23/18/06/sculpture-3424664_1280.jpg" alt="Profiilipilt">
+      <div>
+        <span class="badge">Veebiarendaja</span>
+        <p style="margin:8px 0; color:#cfeff4;">
+          Mulle meeldivad puhas kood, väljendusrikas tüpograafia ja korralikud vahed.
+        </p>
+        <div class="skills" id="skills">
+          <span class="skill">HTML</span>
+          <span class="skill">CSS</span>
+          <span class="skill">Flexbox</span>
+          <span class="skill">Animatsioonid</span>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="cards" id="works">
+    <article class="mini">
+      <h3>Plakatilanding</h3>
+      <p>Suur pealkiri, kontrast ja rütm.</p>
+    </article>
+    <article class="mini">
+      <h3>Galerii</h3>
+      <p>Kaartide võrk Flexboxiga.</p>
+    </article>
+    <article class="mini">
+      <h3>Nupud paketid</h3>
+      <p>Hover efektid ja sära.</p>
+    </article>
+    <a href="https://www.figma.com/design/H6u31BYoUtBXb35kLlssa4/Fast-Food?node-id=0-1&t=4egc6OkUXvSqwDnP-1">
+        <article class="mini">
+        <h3>Äpi makett</h3>
+        <p>Esimene proov</p>
+        </article>
+        </a>
+        <a href="https://www.figma.com/design/S06NchGuJjPP2aWaA5p5Jv/FoodApp?t=Vs1qNyCxLfFuhSBN-1">
+        <article class="mini">
+        <h3>Veebilehe makett</h3>
+         <p>Teine töö</p>
+         </article>
+         </a>
+  </section>
+</main>
+
+<footer id="start">
+  © 2026 Digikangelane — tehtud armastusega CSS-i vastu
+</footer>
 </body>
 </html>
