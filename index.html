@@ -13,42 +13,37 @@
   <nav>
     <div class="brand">Digikangelane</div>
     <ul class="menu">
-      <li><a href="#about">Minust</a></li>
-      <li><a href="#skills">Oskused</a></li>
-      <li><a href="#works">Tööd</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#works">Work</a></li>
     </ul>
-    <a class="cta" href="#start">Alusta</a>
+    <a class="cta" href="#contact">Contact</a>
   </nav>
 </header>
 
 <main>
   <section class="hero">
-    <div>
-      <h1 class="title">Ehitan ilusaid, mis tunduvad kiired</h1>
-      <p class="subtitle">HTML, CSS ja natukene julget mõistust.</p>
+    <h1 class="title">Ehitan ilusaid<br>veebilehte mis<br>tunduvad <span class="highlight">kiired</span></h1>
+    <a class="cta" href="#works" style="margin-top: 60px;">Vaata töid</a>
+  </section>
 
-      <div class="actions">
-        <a class="cta" href="#works">Vaata töid</a>
-        <a class="ghost" href="#contact">Võta ühendust</a>
-      </div>
-    </div>
-
-    <article class="card profile" id="about">
-        <img class="avatar" src="https://cdn.pixabay.com/photo/2018/05/23/18/06/sculpture-3424664_1280.jpg" alt="Profiilipilt">
-      <div>
-        <span class="badge">Veebiarendaja</span>
-        <p class="profile-text">
-          Mulle meeldivad puhas kood, väljendusrikas tüpograafia, korralikud vahed ja huvitavad disainilahendused.
+  <div class="about-section-wrapper">
+    <section class="about-section" id="about">
+      <img class="about-image" src="https://cdn.pixabay.com/photo/2018/05/23/18/06/sculpture-3424664_1280.jpg" alt="Profiilipilt">
+      <div class="about-overlay"></div>
+      <div class="about-content">
+        <h2>I design systems that feel fast.</h2>
+        <p class="about-role">Frontend & UI Designer</p>
+        <p class="about-description">
+          Mulle meeldivad puhas kood, väljendusrikas tüpograafia, korralikud vahed ja huvitavad disainilahendused. Ehitan kasutajaliidesi, mis on nii ilusad kui ka funktsionaalsed.
         </p>
-        <div class="skills" id="skills">
-          <span class="skill">HTML</span>
-          <span class="skill">CSS</span>
-          <span class="skill">Flexbox</span>
-          <span class="skill">Animatsioonid</span>
+        <div class="about-skills">
+          <span class="about-skill">HTML & CSS</span>
+          <span class="about-skill">UI Design</span>
+          <span class="about-skill">Figma</span>
         </div>
       </div>
-    </article>
-  </section>
+    </section>
+  </div>
 
   <section class="cards" id="works">
     <div class="section-header">
@@ -56,31 +51,28 @@
     </div>
     
     <div class="featured-grid">
-      <article class="mini featured">
+      <article class="mini featured" data-color="blue">
+        <div class="card-bar"></div>
         <h3><a href="https://www.figma.com/design/H6u31BYoUtBXb35kLlssa4/Fast-Food?node-id=0-1&t=4egc6OkUXvSqwDnP-1">Äpi makett</a></h3>
-        <p>Esimene proov — täielik kahe käega ülesanne Figmaga.</p>
-        <div class="project-meta">
-          <span class="tag">#Design</span>
-          <span class="tag">#Figma</span>
-        </div>
+        <div class="card-metric"></div>
+        <p>Complete app design exploration</p>
+        <div class="card-tech">UI Design · 2025</div>
       </article>
 
-      <article class="mini featured">
+      <article class="mini featured" data-color="purple">
+        <div class="card-bar"></div>
         <h3><a href="https://www.figma.com/design/S06NchGuJjPP2aWaA5p5Jv/FoodApp?t=Vs1qNyCxLfFuhSBN-1">Veebilehe makett</a></h3>
-        <p>Teine töö — rakendus disaini valdkonnas.</p>
-        <div class="project-meta">
-                    <span class="tag">#Design</span>
-          <span class="tag">#Figma</span>
-        </div>
+        <div class="card-metric"></div>
+        <p>Full web application design system</p>
+        <div class="card-tech">Design System · 2025</div>
       </article>
 
-      <article class="mini featured">
+      <article class="mini featured" data-color="lime">
+        <div class="card-bar"></div>
         <h3><a href="https://www.figma.com/design/AUKhmWAt8HyH2EUyVkd1q8/DogTreats?node-id=0-1&t=G4btH9804FzxDXuG-1">Poe veebilehe makett</a></h3>
-        <p>Ülesanne "Dribble" — poe rakenduse disain.</p>
-        <div class="project-meta">
-                    <span class="tag">#Design</span>
-          <span class="tag">#Figma</span>
-        </div>
+        <div class="card-metric"></div>
+        <p>Pet store website and product interface</p>
+        <div class="card-tech">Frontend · Figma</div>
       </article>
     </div>
 
@@ -112,9 +104,9 @@
     </div>
   </section>
 
-  <section class="cta-section">
-    <h2>Valmis midagi looma?</h2>
-    <a class="cta" href="mailto:hello@example.com">Saada e-mail</a>
+  <section class="cta-section" id="contact">
+    <h2>Let's create something great together</h2>
+    <a class="cta" href="mailto:hello@example.com">Get in touch</a>
   </section>
 </main>
 
