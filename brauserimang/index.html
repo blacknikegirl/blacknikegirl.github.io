@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas Game</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game-container">
+    <canvas id="gameCanvas" width="1200" height="800"></canvas>
+  </div>
+
+  <script>
+    // === CONSTANTS ===
+    const CANVAS_WIDTH = 1200;
+    const CANVAS_HEIGHT = 800;
+    const PLAYER_SIZE = 50;
+    const PLAYER_COLOR = '#00FF00';
+    const PLAYER_SPEED = 300; // pixels per second
+    const ENEMY_RADIUS = 25;
+    const ENEMY_COLOR = '#FF0000';
+    const CANVAS_BG_COLOR = '#1a1a1a';
+
+    // === DIFFICULTY SETTINGS ===
+    const DIFFICULTIES = {
+      easy: {
+        name: 'Easy',
+        enemySpeedStart: 100,
+        enemySpeedMax: 200,
+        spawnIntervalStart: 4,
+        spawnIntervalMin: 2,
+        scaleTime: 90
+      },
+      medium: {
+        name: 'Medium',
+        enemySpeedStart: 150,
+        enemySpeedMax: 300,
+        spawnIntervalStart: 3,
+        spawnIntervalMin: 1,
+        scaleTime: 60
+      },
+      hard: {
+        name: 'Hard',
+        enemySpeedStart: 200,
+        enemySpeedMax: 400,
+        spawnIntervalStart: 2,
+        spawnIntervalMin: 0.5,
+        scaleTime: 45
+      }
+    };
+
+    // === STORAGE FUNCTIONS ===
+    const HIGHSCORE_KEY = 'canvas_apocalypse_highscore';
+
+    function loadHighScore() {
+      const stored = localStorage.getItem(HIGHSCORE_KEY);
+      return stored ? parseInt(stored, 10) : 0;
+    }
+
+    function saveHighScore(score) {
+      localStorage.setItem(HIGHSCORE_KEY, Math.floor(score).toString());
+    }
+
+    // === STATE ===
+    const state = {
+      gameState: 'MENU', // MENU, PLAY, GAME_OVER
+      difficulty: null,
+      lastDifficultyKey: 'medium', // Default for R restart
+      highScore: loadHighScore(),
+      player: {
+        x: CANVAS_WIDTH / 2 - PLAYER_SIZE / 2,
+        y: CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2,
+        width: PLAYER_SIZE,
+        height: PLAYER_SIZE,
+        velocityX: 0,
+        velocityY: 0
+      },
+      enemies: [],
+      particles: [],
+      spawnTimer: 0,
+      timeSurvived: 0,
+      score: 0,
+      shakeAmount: 0,
+      shakeDuration: 0,
+      backgroundOffset: 0
+    };
+
+    // === KEYBOARD INPUT ===
+    const keysPressed = {};
+
+    window.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      keysPressed[key] = true;
+
+      // Handle difficulty selection on menu
+      if (state.gameState === 'MENU' || state.gameState === 'GAME_OVER') {
+        if (key === '1') startGame('easy');
+        if (key === '2') startGame('medium');
+        if (key === '3') startGame('hard');
+      }
+
+      // Quick Return to Menu with R
+      if (key === 'r') {
+        if (state.gameState === 'PLAY' || state.gameState === 'GAME_OVER') {
+          state.gameState = 'MENU';
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keysPressed[e.key.toLowerCase()] = false;
+    });
+
+    // === START GAME FUNCTION ===
+    function startGame(difficultyKey) {
+      state.gameState = 'PLAY';
+      state.lastDifficultyKey = difficultyKey;
+      state.difficulty = DIFFICULTIES[difficultyKey];
+      state.enemies = [];
+      state.particles = []; // Clear old particles
+      state.spawnTimer = 0;
+      state.timeSurvived = 0;
+      state.score = 0;
+      
+      // Reset player position
+      state.player.x = CANVAS_WIDTH / 2 - PLAYER_SIZE / 2;
+      state.player.y = CANVAS_HEIGHT / 2 - PLAYER_SIZE / 2;
+      
+      state.enemies.push(createEnemyAtRandomEdge());
+    }
+
+    // === SETUP ===
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let lastTime = Date.now();
+
+    // === IMAGE LOADING ===
+    const images = {
+      enemy: new Image(),
+      player: new Image()
+    };
+
+    images.enemy.src = 'boy-02.png';
+    images.player.src = 'girl-01.png';
+
+    // === HELPER FUNCTIONS ===
+    function calculateDifficulty() {
+      if (!state.difficulty) return { enemySpeed: 150, spawnInterval: 3 };
+
+      // Calculate difficulty progression (0.0 to 1.0)
+      const difficultyProgress = Math.min(state.timeSurvived / state.difficulty.scaleTime, 1.0);
+
+      // Calculate current enemy speed
+      const currentEnemySpeed = state.difficulty.enemySpeedStart + 
+        (state.difficulty.enemySpeedMax - state.difficulty.enemySpeedStart) * difficultyProgress;
+
+      // Calculate current spawn interval
+      const currentSpawnInterval = Math.max(
+        state.difficulty.spawnIntervalStart - 
+        (state.difficulty.spawnIntervalStart - state.difficulty.spawnIntervalMin) * difficultyProgress,
+        state.difficulty.spawnIntervalMin
+      );
+
+      return {
+        enemySpeed: currentEnemySpeed,
+        spawnInterval: currentSpawnInterval
+      };
+    }
+
+    function createEnemyAtRandomEdge() {
+      const edge = Math.floor(Math.random() * 4);
+      const enemy = {
+        x: 0,
+        y: 0,
+        radius: ENEMY_RADIUS,
+        velocityX: 0,
+        velocityY: 0
+      };
+      
+      switch (edge) {
+        case 0: // Top
+          enemy.x = Math.random() * CANVAS_WIDTH;
+          enemy.y = -ENEMY_RADIUS;
+          break;
+        case 1: // Bottom
+          enemy.x = Math.random() * CANVAS_WIDTH;
+          enemy.y = CANVAS_HEIGHT + ENEMY_RADIUS;
+          break;
+        case 2: // Left
+          enemy.x = -ENEMY_RADIUS;
+          enemy.y = Math.random() * CANVAS_HEIGHT;
+          break;
+        case 3: // Right
+          enemy.x = CANVAS_WIDTH + ENEMY_RADIUS;
+          enemy.y = Math.random() * CANVAS_HEIGHT;
+          break;
+      }
+      
+      return enemy;
+    }
+
+    function normalize(x, y) {
+      const length = Math.sqrt(x * x + y * y);
+      if (length === 0) return { x: 0, y: 0 };
+      return {
+        x: x / length,
+        y: y / length
+      };
+    }
+
+    function updateEnemy(enemy, deltaTime) {
+      // Get current difficulty
+      const difficulty = calculateDifficulty();
+
+      // Calculate direction from enemy to player
+      const playerCenterX = state.player.x + state.player.width / 2;
+      const playerCenterY = state.player.y + state.player.height / 2;
+      const directionX = playerCenterX - enemy.x;
+      const directionY = playerCenterY - enemy.y;
+
+      // Normalize direction vector
+      const normalized = normalize(directionX, directionY);
+
+      // Apply velocity with current difficulty speed
+      enemy.velocityX = normalized.x * difficulty.enemySpeed;
+      enemy.velocityY = normalized.y * difficulty.enemySpeed;
+
+      // Update position
+      enemy.x += enemy.velocityX * deltaTime;
+      enemy.y += enemy.velocityY * deltaTime;
+    }
+
+    function drawEnemy(enemy) {
+      // Draw enemy image centered at its position
+      const size = enemy.radius * 2;
+      if (images.enemy.complete) {
+        ctx.drawImage(images.enemy, enemy.x - enemy.radius, enemy.y - enemy.radius, size, size);
+      } else {
+        // Fallback to original red circle if image not loaded
+        ctx.fillStyle = ENEMY_COLOR;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function isCollidingWithAnyEnemy() {
+      // Get player center
+      const playerCenterX = state.player.x + state.player.width / 2;
+      const playerCenterY = state.player.y + state.player.height / 2;
+      const playerRadius = state.player.width / 2;
+
+      // Check collision with each enemy
+      for (let i = 0; i < state.enemies.length; i++) {
+        const enemy = state.enemies[i];
+        const dx = enemy.x - playerCenterX;
+        const dy = enemy.y - playerCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // If collision found, return true
+        if (distance < playerRadius + enemy.radius) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // === VISUAL POLISH FUNCTIONS ===
+    function triggerScreenShake(amount = 8, duration = 0.2) {
+      state.shakeAmount = amount;
+      state.shakeDuration = duration;
+    }
+
+    function spawnExplosion(x, y, count = 30) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+        const speed = 150 + Math.random() * 150;
+        const particle = {
+          x: x,
+          y: y,
+          velocityX: Math.cos(angle) * speed,
+          velocityY: Math.sin(angle) * speed,
+          life: 0.8,
+          maxLife: 0.8,
+          radius: 3 + Math.random() * 3
+        };
+        state.particles.push(particle);
+      }
+    }
+
+    function updateParticles(deltaTime) {
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        const particle = state.particles[i];
+        particle.life -= deltaTime;
+
+        if (particle.life <= 0) {
+          state.particles.splice(i, 1);
+          continue;
+        }
+
+        // Apply velocity
+        particle.x += particle.velocityX * deltaTime;
+        particle.y += particle.velocityY * deltaTime;
+
+        // Apply gravity / drag
+        particle.velocityY += 200 * deltaTime;
+        particle.velocityX *= 0.98;
+        particle.velocityY *= 0.98;
+      }
+    }
+
+    function drawParticles() {
+      for (let i = 0; i < state.particles.length; i++) {
+        const particle = state.particles[i];
+        const alpha = particle.life / particle.maxLife;
+
+        ctx.fillStyle = `rgba(255, 150, 0, ${alpha * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawBackground() {
+      // Drifting dot pattern background
+      const dotSize = 2;
+      const spacing = 40;
+      const offsetX = (state.backgroundOffset * 0.3) % spacing;
+      const offsetY = (state.backgroundOffset * 0.15) % spacing;
+
+      ctx.fillStyle = 'rgba(100, 100, 120, 0.3)';
+
+      for (let x = -spacing; x < CANVAS_WIDTH + spacing; x += spacing) {
+        for (let y = -spacing; y < CANVAS_HEIGHT + spacing; y += spacing) {
+          ctx.beginPath();
+          ctx.arc(x + offsetX, y + offsetY, dotSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function drawMenu() {
+      // Clear canvas with deep gradient
+      const gradient = ctx.createRadialGradient(
+        CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 50,
+        CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, CANVAS_WIDTH / 2
+      );
+      gradient.addColorStop(0, '#1a0a2e');
+      gradient.addColorStop(1, '#05050a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+      // Draw background pattern
+      drawBackground();
+
+      // Draw title
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 80px Arial, sans-serif';
+      
+      // Title Glow
+      ctx.shadowColor = '#00FF00';
+      ctx.shadowBlur = 25;
+      ctx.fillStyle = '#00FF00';
+      ctx.fillText('⚔ SURVIVAL ⚔', CANVAS_WIDTH / 2, 180);
+      ctx.shadowBlur = 0;
+
+      // Draw record
+      ctx.font = 'bold 28px Arial, sans-serif';
+      ctx.fillStyle = '#FFFF00';
+      ctx.fillText(`👑 RECORD: ${Math.floor(state.highScore)}s`, CANVAS_WIDTH / 2, 240);
+
+      // Buttons
+      const options = [
+        { key: '1', name: 'EASY', color: '#00FF00', diff: DIFFICULTIES.easy },
+        { key: '2', name: 'MEDIUM', color: '#FFAA00', diff: DIFFICULTIES.medium },
+        { key: '3', name: 'HARD', color: '#FF3333', diff: DIFFICULTIES.hard }
+      ];
+
+      const bWidth = 320;
+      const bHeight = 100;
+      const spacing = 30;
+      const totalWidth = (bWidth * 3) + (spacing * 2);
+      const startX = (CANVAS_WIDTH - totalWidth) / 2;
+      const startY = CANVAS_HEIGHT / 2 + 20;
+
+      for (let i = 0; i < options.length; i++) {
+        const opt = options[i];
+        const x = startX + i * (bWidth + spacing);
+        const y = startY;
+
+        // Button Box
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.strokeStyle = opt.color;
+        ctx.lineWidth = 3;
+        ctx.fillRect(x, y, bWidth, bHeight);
+        ctx.strokeRect(x, y, bWidth, bHeight);
+
+        // Key Hint
+        ctx.font = 'bold 36px Arial, sans-serif';
+        ctx.fillStyle = opt.color;
+        ctx.fillText(`[${opt.key}]`, x + bWidth / 2, y + 45);
+
+        // Name
+        ctx.font = 'bold 22px Arial, sans-serif';
+        ctx.fillText(opt.name, x + bWidth / 2, y + 80);
+      }
+
+      // Bottom Instruction
+      ctx.font = 'bold 20px Arial, sans-serif';
+      ctx.fillStyle = '#AAAAFF';
+      ctx.fillText('Select Difficulty to Start', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 80);
+    }
+
+    function drawUI() {
+      // Only show minimal UI during gameplay
+      if (state.gameState === 'PLAY') {
+        const boxWidth = 180;
+        const boxHeight = 50;
+
+        // --- Left Box (Enemies) ---
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, boxWidth, boxHeight);
+        ctx.strokeStyle = '#FF3333';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, boxWidth, boxHeight);
+
+        ctx.font = 'bold 24px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FF3333';
+        ctx.fillText(`👾 ${state.enemies.length}`, boxWidth / 2, 35);
+
+        // --- Right Box (Time) ---
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(CANVAS_WIDTH - boxWidth, 0, boxWidth, boxHeight);
+        ctx.strokeStyle = '#FFFF00';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(CANVAS_WIDTH - boxWidth, 0, boxWidth, boxHeight);
+
+        ctx.font = 'bold 18px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillText(`Time: ${Math.floor(state.score)}s`, CANVAS_WIDTH - boxWidth / 2, 33);
+
+        return;
+      }
+
+      // Full UI for GAME_OVER
+      if (state.gameState === 'GAME_OVER') {
+        // Draw semi-transparent overlay
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // Draw game over box
+        const boxW = 600;
+        const boxH = 400;
+        const boxX = (CANVAS_WIDTH - boxW) / 2;
+        const boxY = (CANVAS_HEIGHT - boxH) / 2;
+
+        ctx.fillStyle = 'rgba(20, 0, 20, 0.95)';
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = '#FF3333';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // Draw GAME OVER
+        ctx.font = 'bold 64px Arial, sans-serif';
+        ctx.fillStyle = '#FF3333';
+        ctx.textAlign = 'center';
+        ctx.fillText('💀 GAME OVER 💀', CANVAS_WIDTH / 2, boxY + 80);
+
+        // Draw final stats
+        ctx.font = 'bold 32px Arial, sans-serif';
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillText(`Final Time: ${Math.floor(state.score)}s`, CANVAS_WIDTH / 2, boxY + 150);
+
+        ctx.font = 'bold 24px Arial, sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(`Enemies Encountered: ${state.enemies.length}`, CANVAS_WIDTH / 2, boxY + 190);
+        ctx.fillText(`Record Time: ${Math.floor(state.highScore)}s`, CANVAS_WIDTH / 2, boxY + 230);
+
+        // Show restart instructions
+        ctx.fillStyle = '#AAAAFF';
+        ctx.font = 'bold 24px Arial, sans-serif';
+        ctx.fillText('Press R for Menu', CANVAS_WIDTH / 2, boxY + 300);
+
+        // Show if new record
+        if (state.score > state.highScore) {
+          ctx.fillStyle = '#00FF00';
+          ctx.font = 'bold 36px Arial, sans-serif';
+          ctx.fillText('🎉 NEW RECORD! 🎉', CANVAS_WIDTH / 2, boxY + 360);
+        }
+
+        ctx.textAlign = 'left';
+      }
+    }
+
+
+    // === UPDATE FUNCTION ===
+    function update() {
+      const currentTime = Date.now();
+      const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+      lastTime = currentTime;
+
+      // Update background animation and particles (always, even in MENU)
+      state.backgroundOffset += deltaTime * 30;
+      updateParticles(deltaTime);
+
+      // Update screen shake
+      if (state.shakeDuration > 0) {
+        state.shakeDuration -= deltaTime;
+      } else {
+        state.shakeAmount = 0;
+      }
+
+      if (state.gameState !== 'PLAY') {
+        return; // Only update gameplay during PLAY state
+      }
+
+      // Track survival time and score
+      state.timeSurvived += deltaTime;
+      state.score += deltaTime; // 1 point per second
+
+      // Update spawn timer and spawn enemies with dynamic interval
+      const difficulty = calculateDifficulty();
+      state.spawnTimer += deltaTime;
+      if (state.spawnTimer >= difficulty.spawnInterval) {
+        state.enemies.push(createEnemyAtRandomEdge());
+        state.spawnTimer = 0;
+      }
+
+      // Update player
+      // Reset velocity
+      state.player.velocityX = 0;
+      state.player.velocityY = 0;
+
+      // Check WASD and Arrow keys
+      if (keysPressed['w'] || keysPressed['arrowup']) {
+        state.player.velocityY = -PLAYER_SPEED;
+      }
+      if (keysPressed['s'] || keysPressed['arrowdown']) {
+        state.player.velocityY = PLAYER_SPEED;
+      }
+      if (keysPressed['a'] || keysPressed['arrowleft']) {
+        state.player.velocityX = -PLAYER_SPEED;
+      }
+      if (keysPressed['d'] || keysPressed['arrowright']) {
+        state.player.velocityX = PLAYER_SPEED;
+      }
+
+      // Apply velocity
+      state.player.x += state.player.velocityX * deltaTime;
+      state.player.y += state.player.velocityY * deltaTime;
+
+      // Boundary checking
+      if (state.player.x < 0) {
+        state.player.x = 0;
+      }
+      if (state.player.x + state.player.width > CANVAS_WIDTH) {
+        state.player.x = CANVAS_WIDTH - state.player.width;
+      }
+      if (state.player.y < 0) {
+        state.player.y = 0;
+      }
+      if (state.player.y + state.player.height > CANVAS_HEIGHT) {
+        state.player.y = CANVAS_HEIGHT - state.player.height;
+      }
+
+      // Update all enemies
+      for (let i = 0; i < state.enemies.length; i++) {
+        updateEnemy(state.enemies[i], deltaTime);
+      }
+
+      // Check collision with any enemy
+      if (isCollidingWithAnyEnemy()) {
+        // Get collision point for particle effect
+        const playerCenterX = state.player.x + state.player.width / 2;
+        const playerCenterY = state.player.y + state.player.height / 2;
+
+        // Trigger visual effects
+        triggerScreenShake(10, 0.2);
+        spawnExplosion(playerCenterX, playerCenterY, 30);
+
+        state.gameState = 'GAME_OVER';
+        
+        // Update high score if current score is better
+        if (state.score > state.highScore) {
+          state.highScore = state.score;
+          saveHighScore(state.highScore);
+        }
+      }
+    }
+
+    // === DRAW FUNCTION ===
+    function draw() {
+      if (state.gameState === 'MENU') {
+        drawMenu();
+      } else {
+        // Apply screen shake
+        let shakeX = 0;
+        let shakeY = 0;
+        if (state.shakeAmount > 0) {
+          shakeX = (Math.random() - 0.5) * state.shakeAmount * 2;
+          shakeY = (Math.random() - 0.5) * state.shakeAmount * 2;
+        }
+
+        ctx.save();
+        ctx.translate(shakeX, shakeY);
+
+        // Clear canvas
+        ctx.fillStyle = CANVAS_BG_COLOR;
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+        // Draw background
+        drawBackground();
+
+        // Draw player
+        if (images.player.complete) {
+          ctx.drawImage(images.player, state.player.x, state.player.y, state.player.width, state.player.height);
+        } else {
+          // Fallback to original green square if image not loaded
+          ctx.fillStyle = PLAYER_COLOR;
+          ctx.fillRect(
+            state.player.x,
+            state.player.y,
+            state.player.width,
+            state.player.height
+          );
+        }
+
+        // Draw all enemies
+        for (let i = 0; i < state.enemies.length; i++) {
+          drawEnemy(state.enemies[i]);
+        }
+
+        // Draw particles
+        drawParticles();
+
+        ctx.restore();
+
+        // Draw UI (no shake effect)
+        drawUI();
+      }
+    }
+
+    // === GAME LOOP ===
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Start the game loop (game begins in MENU state)
+    gameLoop();
+  </script>
+</body>
+</html>
