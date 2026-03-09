@@ -1,57 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Draw App</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawing Application</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="container">
+        <!-- Application Title -->
+        <h1>🎨 Drawing Application</h1>
 
-<h1>🎨 Draw App</h1>
+        <!-- Toolbar Section -->
+        <div class="toolbar">
+            <!-- Color Picker Tool -->
+            <div class="tool-group">
+                <label for="colorPicker">Color:</label>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
 
-<div class="main-container">
+            <!-- Brush Size Tool -->
+            <div class="tool-group">
+                <label for="brushSize">Size:</label>
+                <input type="range" id="brushSize" min="1" max="50" value="5">
+                <span id="brushSizeValue">5px</span>
+            </div>
 
-  <!-- Левая секция: Canvas и инструменты -->
-  <div class="canvas-section">
-    <div class="tools">
-      <label>Color</label>
-      <input type="color" id="colorPicker">
+            <!-- Line Cap Style -->
+            <div class="tool-group">
+                <input type="checkbox" id="lineCap" checked>
+                <label for="lineCap">Smooth Edges</label>
+            </div>
 
-      <div class="colors">
-        <button class="colorBtn" data-color="black" style="background:black"></button>
-        <button class="colorBtn" data-color="red" style="background:red"></button>
-        <button class="colorBtn" data-color="blue" style="background:blue"></button>
-        <button class="colorBtn" data-color="green" style="background:green"></button>
-        <button class="colorBtn" data-color="yellow" style="background:yellow"></button>
-      </div>
+            <!-- Brush Button -->
+            <button id="brushBtn" class="active">🖌️ Brush</button>
 
-      <label>Brush</label>
-      <input type="range" id="brushSize" min="1" max="25" value="5">
+            <!-- Eraser Button -->
+            <button id="eraserBtn">🧹 Eraser</button>
 
-      <button id="brush" class="active">Brush</button>
-      <button id="eraser">Eraser</button>
-      <button id="undo">Undo</button>
-      <button id="redo">Redo</button>
-      <button id="clearCanvas">Clear Canvas</button>
-      <button id="saveDrawing">Save Drawing</button>
+            <!-- Clear Canvas Button -->
+            <button id="clearBtn">Clear Canvas</button>
+
+            <!-- Save Drawing Button -->
+            <button id="saveBtn">Save Drawing</button>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-container">
+            <canvas id="drawingCanvas" width="1200" height="800"></canvas>
+        </div>
     </div>
 
-    <canvas id="canvas" width="1040" height="600"></canvas>
-  </div>
-
-  <!-- Правая секция: Галерея -->
-  <div class="gallery-section">
-    <h2>Gallery</h2>
-    <div id="gallery"></div>
-    <div id="previewWindow" style="display:none;">
-      <img id="previewImg" src="">
-      <button id="closePreview">Close</button>
-    </div>
-  </div>
-
-</div>
-
-<script src="script.js"></script>
+    <!-- Script Link -->
+    <script src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,67 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    font-size: 32px;
+    color: white;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 40px;
+}
+
+.shuffle-boxes {
+    width: 400px;
+    height: 300px;
+    position: relative;
+}
+
+.shuffle-box {
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 48px;
+    font-weight: bold;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.shuffle-box:nth-child(1) { top: 20px; left: 20px; z-index: 1; }
+.shuffle-box:nth-child(2) { top: 40px; left: 150px; z-index: 2; }
+.shuffle-box:nth-child(3) { top: 120px; left: 60px; z-index: 1; }
+.shuffle-box:nth-child(4) { top: 100px; left: 200px; z-index: 2; }
+
+.shuffle-box:hover {
+    transform: scale(1.1);
+}
+
+.shuffle-box.active {
+    z-index: 100 !important;
+    transform: scale(1.05);
+}

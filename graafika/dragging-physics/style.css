@@ -1,0 +1,60 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    padding: 40px 20px;
+}
+
+h1 {
+    font-size: 32px;
+    color: white;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 150px);
+    gap: 30px;
+    justify-content: center;
+}
+
+.draggable {
+    width: 150px;
+    height: 150px;
+    background: linear-gradient(135deg, #FF6B6B, #FF8E72);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    cursor: grab;
+    position: relative;
+    z-index: 1;
+    user-select: none;
+}
+
+.draggable:active {
+    cursor: grabbing;
+    z-index: 100;
+}

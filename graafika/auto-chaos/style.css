@@ -1,0 +1,89 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    text-align: center;
+}
+
+h1 {
+    font-size: 32px;
+    color: white;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 40px;
+}
+
+.chaos-elements {
+    display: grid;
+    grid-template-columns: repeat(3, 130px);
+    gap: 30px;
+    justify-content: center;
+}
+
+.chaos-item {
+    width: 130px;
+    height: 130px;
+    background: linear-gradient(135deg, #FF6B6B, #FF8E72);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    will-change: transform;
+}
+
+@keyframes rotate1 {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotate2 {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotate3 {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotate4 {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotate5 {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes rotate6 {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.chaos-item:nth-child(1) { animation: rotate1 20s linear infinite; }
+.chaos-item:nth-child(2) { animation: rotate2 15s linear infinite; }
+.chaos-item:nth-child(3) { animation: rotate3 25s linear infinite; }
+.chaos-item:nth-child(4) { animation: rotate4 18s linear infinite; }
+.chaos-item:nth-child(5) { animation: rotate5 22s linear infinite; }
+.chaos-item:nth-child(6) { animation: rotate6 16s linear infinite; }

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 PAC-MAN GAME</h1>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <label>SCORE:</label>
+                    <span id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <label>LEVEL:</label>
+                    <span id="level">1</span>
+                </div>
+                <div class="stat-item">
+                    <label>LIVES:</label>
+                    <span id="lives">3</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="game-board-wrapper">
+            <canvas id="gameCanvas" width="560" height="620"></canvas>
+        </div>
+
+        <div class="game-info">
+            <div class="controls">
+                <h3>📋 CONTROLS</h3>
+                <p>⬆️ ⬇️ ⬅️ ➡️ Arrow Keys to Move</p>
+                <p>SPACEBAR to Start/Restart</p>
+            </div>
+            <div class="legend">
+                <h3>🎯 GAME RULES</h3>
+                <p>🔵 Eat all pellets to advance</p>
+                <p>⭐ Power-ups let you eat ghosts!</p>
+                <p>👻 Avoid ghosts (3 lives)</p>
+                <p>🏆 Complete all levels to win</p>
+            </div>
+        </div>
+
+        <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

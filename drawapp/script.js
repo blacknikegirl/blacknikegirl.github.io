@@ -1,189 +1,391 @@
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+// ===================================
+// Drawing Application - JavaScript
+// ===================================
 
-const colorPicker = document.getElementById("colorPicker");
-const brushSize = document.getElementById("brushSize");
-const brushBtn = document.getElementById("brush");
-const eraserBtn = document.getElementById("eraser");
-const undoBtn = document.getElementById("undo");
-const redoBtn = document.getElementById("redo");
-const clearCanvasBtn = document.getElementById("clearCanvas");
-const saveDrawingBtn = document.getElementById("saveDrawing");
+// Canvas and Context Setup
+const canvas = document.getElementById('drawingCanvas');
+const ctx = canvas.getContext('2d');
 
-const gallery = document.getElementById("gallery");
-const previewWindow = document.getElementById("previewWindow");
-const previewImg = document.getElementById("previewImg");
-const closePreviewBtn = document.getElementById("closePreview");
+// DOM Elements - Toolbar Controls
+const colorPicker = document.getElementById('colorPicker');
+const brushSize = document.getElementById('brushSize');
+const brushSizeValue = document.getElementById('brushSizeValue');
+const clearBtn = document.getElementById('clearBtn');
+const saveBtn = document.getElementById('saveBtn');
+const brushBtn = document.getElementById('brushBtn');
+const eraserBtn = document.getElementById('eraserBtn');
+const lineCapCheckbox = document.getElementById('lineCap');
 
-const colorButtons = document.querySelectorAll(".colorBtn");
+// Drawing State Variables
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+let currentTool = 'brush'; // Track current tool: 'brush' or 'eraser'
 
-let drawing = false;
-let currentColor = "black";
-let currentTool = "brush";
+// History Management for Undo/Redo
 let history = [];
 let historyStep = -1;
+const MAX_HISTORY = 50; // Limit history to prevent memory issues
 
-// ---------- Drawing ----------
-canvas.addEventListener("mousedown", startDraw);
-canvas.addEventListener("mouseup", stopDraw);
-canvas.addEventListener("mouseleave", stopDraw);
-canvas.addEventListener("mousemove", draw);
-
-function startDraw(e){
-  drawing = true;
-  ctx.beginPath();
-  ctx.moveTo(e.offsetX, e.offsetY);
-}
-
-function stopDraw(){
-  if(drawing){
-    drawing = false;
-    ctx.beginPath();
-    saveState();
-  }
-}
-
-function draw(e){
-  if(!drawing) return;
-  ctx.lineWidth = brushSize.value;
-  ctx.lineCap = "round";
-
-  if(currentTool === "brush"){
-    ctx.globalCompositeOperation = "source-over";
-    ctx.strokeStyle = currentColor;
-  } else if(currentTool === "eraser"){
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.strokeStyle = "rgba(0,0,0,1)";
-  }
-
-  ctx.lineTo(e.offsetX, e.offsetY);
-  ctx.stroke();
-}
-
-// ---------- History ----------
-function saveState(){
-  historyStep++;
-  history = history.slice(0, historyStep);
-  history.push(canvas.toDataURL());
-}
-
-function restoreState(step){
-  const img = new Image();
-  img.src = history[step];
-  img.onload = () => {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(img,0,0);
-  }
-}
-
-undoBtn.onclick = () => {
-  if(historyStep > 0){
-    historyStep--;
-    restoreState(historyStep);
-  }
-};
-
-redoBtn.onclick = () => {
-  if(historyStep < history.length - 1){
+/**
+ * Save current canvas state to history
+ */
+function saveState() {
+    // Remove any redo steps if user draws after undo
+    history = history.slice(0, historyStep + 1);
+    
+    // Add new state
+    history.push(canvas.toDataURL());
     historyStep++;
-    restoreState(historyStep);
-  }
-};
+    
+    // Limit history size
+    if (history.length > MAX_HISTORY) {
+        history.shift();
+        historyStep--;
+    }
+}
 
-// ---------- Tools ----------
-colorPicker.addEventListener("change", () => {
-  currentColor = colorPicker.value;
-  currentTool = "brush";
-  setActiveTool();
+/**
+ * Restore canvas from a specific history state
+ * @param {number} step - The history step to restore
+ */
+function restoreState(step) {
+    if (step < 0 || step >= history.length) return;
+    
+    const img = new Image();
+    img.src = history[step];
+    img.onload = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+    };
+}
+
+/**
+ * Undo last drawing action (Ctrl+Z)
+ */
+function undo() {
+    if (historyStep > 0) {
+        historyStep--;
+        restoreState(historyStep);
+    }
+}
+
+/**
+ * Redo last undone action (Ctrl+Y)
+ */
+function redo() {
+    if (historyStep < history.length - 1) {
+        historyStep++;
+        restoreState(historyStep);
+    }
+}
+
+// Initialize Canvas
+function initCanvas() {
+    // Set canvas background to white
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Set initial brush properties
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = brushSize.value;
+    ctx.strokeStyle = colorPicker.value;
+}
+
+// ===================================
+// Mouse Drawing Events
+// ===================================
+
+/**
+ * Handle mouse button press - start drawing
+ * @param {MouseEvent} e - Mouse event
+ */
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    lastX = e.clientX - rect.left;
+    lastY = e.clientY - rect.top;
+    isDrawing = true;
+    
+    // Start a new path
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
 });
 
-colorButtons.forEach(btn => btn.addEventListener("click", () => {
-  currentColor = btn.dataset.color;
-  currentTool = "brush";
-  setActiveTool();
-}));
+/**
+ * Handle mouse movement - draw lines
+ * @param {MouseEvent} e - Mouse event
+ */
+canvas.addEventListener('mousemove', (e) => {
+    if (!isDrawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+    
+    // Set drawing mode based on current tool
+    if (currentTool === 'brush') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = colorPicker.value;
+    } else if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)'; // Opacity for eraser
+    }
+    
+    // Draw line from last position to current position
+    ctx.lineTo(currentX, currentY);
+    ctx.stroke();
+    
+    // Update last position
+    lastX = currentX;
+    lastY = currentY;
+});
 
-brushBtn.onclick = () => {
-  currentTool = "brush";
-  setActiveTool();
-};
+/**
+ * Handle mouse button release - stop drawing
+ */
+canvas.addEventListener('mouseup', () => {
+    if (isDrawing) {
+        isDrawing = false;
+        ctx.beginPath();
+        saveState(); // Save state after drawing completes
+    }
+});
 
-eraserBtn.onclick = () => {
-  currentTool = "eraser";
-  setActiveTool();
-};
+/**
+ * Handle mouse leaving canvas - stop drawing
+ */
+canvas.addEventListener('mouseleave', () => {
+    isDrawing = false;
+    ctx.beginPath();
+});
 
-function setActiveTool(){
-  if(currentTool === "brush"){
-    brushBtn.classList.add("active");
-    eraserBtn.classList.remove("active");
-  } else {
-    eraserBtn.classList.add("active");
-    brushBtn.classList.remove("active");
-  }
+// ===================================
+// Touch Support for Mobile Devices
+// ===================================
+
+/**
+ * Handle touch start - begin drawing on touch devices
+ * @param {TouchEvent} e - Touch event
+ */
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    
+    lastX = touch.clientX - rect.left;
+    lastY = touch.clientY - rect.top;
+    isDrawing = true;
+    
+    // Start a new path
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+});
+
+/**
+ * Handle touch movement - draw on touch devices
+ * @param {TouchEvent} e - Touch event
+ */
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    
+    if (!isDrawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    
+    const currentX = touch.clientX - rect.left;
+    const currentY = touch.clientY - rect.top;
+    
+    // Set drawing mode based on current tool
+    if (currentTool === 'brush') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = colorPicker.value;
+    } else if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)'; // Opacity for eraser
+    }
+    
+    // Draw line from last position to current position
+    ctx.lineTo(currentX, currentY);
+    ctx.stroke();
+    
+    // Update last position
+    lastX = currentX;
+    lastY = currentY;
+});
+
+/**
+ * Handle touch end - stop drawing on touch devices
+ */
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    if (isDrawing) {
+        isDrawing = false;
+        ctx.beginPath();
+        saveState(); // Save state after drawing completes
+    }
+});
+
+// ===================================
+// Toolbar Controls - Event Listeners
+// ===================================
+
+/**
+ * Color picker change event - update brush color and switch to brush mode
+ */
+colorPicker.addEventListener('change', (e) => {
+    ctx.strokeStyle = e.target.value;
+    setTool('brush');
+});
+
+colorPicker.addEventListener('input', (e) => {
+    ctx.strokeStyle = e.target.value;
+    if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'source-over'; // Preview brush while color picking
+    }
+});
+
+/**
+ * Brush size change event - update line width
+ */
+brushSize.addEventListener('input', (e) => {
+    const size = e.target.value;
+    ctx.lineWidth = size;
+    brushSizeValue.textContent = size + 'px';
+});
+
+/**
+ * Line cap checkbox - toggle smooth round edges
+ */
+lineCapCheckbox.addEventListener('change', (e) => {
+    if (e.target.checked) {
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    } else {
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'miter';
+    }
+});
+
+/**
+ * Toggle tool between brush and eraser
+ */
+function setTool(tool) {
+    currentTool = tool;
+    
+    // Update button states and cursor
+    if (tool === 'brush') {
+        brushBtn.classList.add('active');
+        eraserBtn.classList.remove('active');
+        canvas.classList.remove('eraser-mode');
+        ctx.globalCompositeOperation = 'source-over';
+    } else if (tool === 'eraser') {
+        brushBtn.classList.remove('active');
+        eraserBtn.classList.add('active');
+        canvas.classList.add('eraser-mode');
+        ctx.globalCompositeOperation = 'destination-out';
+    }
 }
 
-// ---------- Canvas controls ----------
-clearCanvasBtn.onclick = () => {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  saveState();
-};
+/**
+ * Eraser button - toggle eraser mode
+ */
+eraserBtn.addEventListener('click', () => {
+    if (currentTool === 'eraser') {
+        // Switch back to brush
+        setTool('brush');
+    } else {
+        // Switch to eraser
+        setTool('eraser');
+    }
+});
 
-// ---------- Gallery ----------
-function loadGallery(){
-  const saved = JSON.parse(localStorage.getItem("drawGallery") || "[]");
-  saved.forEach(src => addImageToGallery(src, false));
-}
+/**
+ * Brush button - toggle back to brush mode
+ */
+brushBtn.addEventListener('click', () => {
+    if (currentTool !== 'brush') {
+        setTool('brush');
+    }
+});
 
-function saveGallery(){
-  const images = Array.from(document.querySelectorAll("#gallery img")).map(img => img.src);
-  localStorage.setItem("drawGallery", JSON.stringify(images));
-}
+/**
+ * Clear Canvas button - remove all drawings
+ */
+clearBtn.addEventListener('click', () => {
+    // Confirm before clearing
+    if (confirm('Are you sure you want to clear the canvas?')) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        saveState(); // Save cleared state to history
+    }
+});
 
-saveDrawingBtn.onclick = () => {
-  const image = canvas.toDataURL();
-  addImageToGallery(image, true);
-};
+/**
+ * Save Drawing button - download as PNG
+ */
+saveBtn.addEventListener('click', () => {
+    // Create a link element for downloading
+    const link = document.createElement('a');
+    
+    // Convert canvas to image data URL
+    const imageData = canvas.toDataURL('image/png');
+    
+    // Set link properties
+    link.href = imageData;
+    link.download = 'drawing_' + new Date().getTime() + '.png';
+    
+    // Trigger download
+    link.click();
+});
 
-function addImageToGallery(src, save=true){
-  const box = document.createElement("div");
-  box.className = "imageBox";
+// ===================================
+// Keyboard Shortcuts
+// ===================================
 
-  const img = document.createElement("img");
-  img.src = src;
-  img.onclick = () => openPreview(src);
+/**
+ * Handle keyboard shortcuts for undo/redo
+ */
+document.addEventListener('keydown', (e) => {
+    // Ctrl+Z or Cmd+Z on Mac - Undo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+    }
+    
+    // Ctrl+Y or Ctrl+Shift+Z - Redo
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+    }
+});
 
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "×";
-  deleteBtn.className = "deleteBtn";
-  deleteBtn.onclick = (e) => {
-    e.stopPropagation();
-    box.remove();
-    saveGallery();
-    closePreview();
-  }
+// ===================================
+// Initialization
+// ===================================
 
-  box.appendChild(img);
-  box.appendChild(deleteBtn);
-  gallery.appendChild(box);
-
-  if(save) saveGallery();
-}
-
-// ---------- Preview ----------
-function openPreview(src){
-  previewImg.src = src;
-  previewWindow.style.display = "flex";
-}
-
-function closePreview(){
-  previewWindow.style.display = "none";
-}
-
-closePreviewBtn.onclick = closePreview;
-
-// ---------- Init ----------
-saveState();
-loadGallery();
-setActiveTool();
+/**
+ * Initialize the application when page loads
+ */
+document.addEventListener('DOMContentLoaded', () => {
+    initCanvas();
+    
+    // Set initial brush properties from UI
+    ctx.strokeStyle = colorPicker.value;
+    ctx.lineWidth = brushSize.value;
+    
+    // Update brush size display
+    brushSizeValue.textContent = brushSize.value + 'px';
+    
+    // Set line cap style
+    if (lineCapCheckbox.checked) {
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+    }
+    
+    // Save initial blank canvas state for undo
+    saveState();
+});
