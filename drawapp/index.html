@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Draw App</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>🎨 Draw App</h1>
+
+<div class="main-container">
+
+  <!-- Левая секция: Canvas и инструменты -->
+  <div class="canvas-section">
+    <div class="tools">
+      <label>Color</label>
+      <input type="color" id="colorPicker">
+
+      <div class="colors">
+        <button class="colorBtn" data-color="black" style="background:black"></button>
+        <button class="colorBtn" data-color="red" style="background:red"></button>
+        <button class="colorBtn" data-color="blue" style="background:blue"></button>
+        <button class="colorBtn" data-color="green" style="background:green"></button>
+        <button class="colorBtn" data-color="yellow" style="background:yellow"></button>
+      </div>
+
+      <label>Brush</label>
+      <input type="range" id="brushSize" min="1" max="25" value="5">
+
+      <button id="brush" class="active">Brush</button>
+      <button id="eraser">Eraser</button>
+      <button id="undo">Undo</button>
+      <button id="redo">Redo</button>
+      <button id="clearCanvas">Clear Canvas</button>
+      <button id="saveDrawing">Save Drawing</button>
+    </div>
+
+    <canvas id="canvas" width="1040" height="600"></canvas>
+  </div>
+
+  <!-- Правая секция: Галерея -->
+  <div class="gallery-section">
+    <h2>Gallery</h2>
+    <div id="gallery"></div>
+    <div id="previewWindow" style="display:none;">
+      <img id="previewImg" src="">
+      <button id="closePreview">Close</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
