@@ -9,43 +9,41 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎮 PAC-MAN GAME</h1>
+            <div class="header-content">
+                <h1>🎮 PAC-MAN GAME</h1>
+                <p class="subtitle">Classic Arcade Adventure</p>
+            </div>
             <div class="stats-bar">
                 <div class="stat-item">
                     <label>SCORE:</label>
-                    <span id="score">0</span>
-                </div>
-                <div class="stat-item">
-                    <label>LEVEL:</label>
-                    <span id="level">1</span>
+                    <span id="score" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
                     <label>LIVES:</label>
-                    <span id="lives">3</span>
+                    <span id="lives" class="stat-value">3</span>
                 </div>
             </div>
         </header>
 
-        <div class="game-board-wrapper">
-            <canvas id="gameCanvas" width="560" height="620"></canvas>
+        <div class="game-section">
+            <div class="game-board-wrapper">
+                <canvas id="gameCanvas" width="800" height="500"></canvas>
+            </div>
         </div>
 
-        <div class="game-info">
-            <div class="controls">
-                <h3>📋 CONTROLS</h3>
-                <p>⬆️ ⬇️ ⬅️ ➡️ Arrow Keys to Move</p>
-                <p>SPACEBAR to Start/Restart</p>
-            </div>
-            <div class="legend">
-                <h3>🎯 GAME RULES</h3>
-                <p>🔵 Eat all pellets to advance</p>
-                <p>⭐ Power-ups let you eat ghosts!</p>
-                <p>👻 Avoid ghosts (3 lives)</p>
-                <p>🏆 Complete all levels to win</p>
-            </div>
+        <div class="game-controls">
+            <button id="startButton" class="start-btn">▶ START GAME</button>
+            <button id="pauseButton" class="pause-btn">⏸ PAUSE</button>
         </div>
 
         <div id="messageBox" class="message-box"></div>
+        <div id="gameModal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="modalTitle">Game Over</h2>
+                <p id="modalMessage">Final Score: 0</p>
+                <button id="modalButton" class="modal-btn">Play Again</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

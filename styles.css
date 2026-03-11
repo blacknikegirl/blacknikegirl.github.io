@@ -257,11 +257,6 @@
     flex-direction: column;
   }
   
-  .mini.featured:nth-child(3n) {
-    transform: scaleY(1.08);
-    transform-origin: top;
-  }
-  
   .mini.featured::after {
     content: '→';
     position: absolute;
@@ -278,10 +273,6 @@
   .mini.featured:hover {
     transform: translateY(-12px);
     box-shadow: 0 20px 50px rgba(99,102,241,.2);
-  }
-  
-  .mini.featured:nth-child(3n):hover {
-    transform: translateY(-12px) scaleY(1.08);
   }
   
   .mini.featured:hover::after {
