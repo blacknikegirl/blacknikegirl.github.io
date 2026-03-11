@@ -241,7 +241,19 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 28px;
     margin-bottom: 80px;
-    auto-rows: auto;
+    auto-rows: 1fr;
+  }
+  
+  @media (max-width: 1024px) {
+    .featured-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .featured-grid {
+      grid-template-columns: 1fr;
+    }
   }
   
   .mini.featured {
@@ -255,6 +267,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100%;
   }
   
   .mini.featured::after {
@@ -343,6 +356,7 @@
     line-height: 1.6;
     margin: 0 24px 16px;
     color: var(--text-secondary);
+    flex-grow: 1;
   }
   
   .card-tech {

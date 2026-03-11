@@ -139,21 +139,30 @@ function updateButtonStates() {
 function update() {
     if (!gameIsRunning) return;
     
-    // Handle input - immediately try requested direction
-    let requestedX = pacman.x;
-    let requestedY = pacman.y;
+    // Handle input - immediately register direction without maze checks
+    if (keys['w']) pacman.nextDirX = 0, pacman.nextDirY = -1;
+    if (keys['s']) pacman.nextDirX = 0, pacman.nextDirY = 1;
+    if (keys['a']) pacman.nextDirX = -1, pacman.nextDirY = 0;
+    if (keys['d']) pacman.nextDirX = 1, pacman.nextDirY = 0;
     
-    if (keys['w']) requestedY = pacman.y - 1;
-    if (keys['s']) requestedY = pacman.y + 1;
-    if (keys['a']) requestedX = pacman.x - 1;
-    if (keys['d']) requestedX = pacman.x + 1;
+    // Try to move in the desired direction
+    let tryX = pacman.x + pacman.nextDirX;
+    let tryY = pacman.y + pacman.nextDirY;
     
-    // Try to move to requested position
-    if (requestedX >= 0 && requestedX < MAZE_WIDTH && 
-        requestedY >= 0 && requestedY < MAZE_HEIGHT &&
-        maze[requestedY] && maze[requestedY][requestedX] === 0) {
-        pacman.x = requestedX;
-        pacman.y = requestedY;
+    // If desired direction is valid, use it
+    if (tryX >= 0 && tryX < MAZE_WIDTH && tryY >= 0 && tryY < MAZE_HEIGHT && maze[tryY][tryX] === 0) {
+        pacman.dirX = pacman.nextDirX;
+        pacman.dirY = pacman.nextDirY;
+    }
+    
+    // Move in current direction
+    let newX = pacman.x + pacman.dirX;
+    let newY = pacman.y + pacman.dirY;
+    
+    // Check walls and move
+    if (maze[newY] && maze[newY][newX] === 0) {
+        pacman.x = newX;
+        pacman.y = newY;
     }
     
     // Move ghosts with edge-wrap
@@ -454,8 +463,8 @@ function createPellets() {
                 }
                 
                 // Determine if this should be a power pellet or regular pellet
-                // Reduced to 3% chance for fewer power-ups
-                const isPowerPellet = Math.random() < 0.03;
+                // Reduced to 4% chance for fewer power-ups
+                const isPowerPellet = Math.random() < 0.04;
                 
                 if (isPowerPellet) {
                     powerUps.push({ x, y, type: 'powerup', points: 50 });
@@ -468,14 +477,12 @@ function createPellets() {
     
     // Ensure at least 1 power-up
     if (powerUps.length < 1) {
-        for (let i = powerUps.length; i < 1; i++) {
-            // Find a random empty pellet location
-            if (pellets.length > 0) {
-                const idx = Math.floor(Math.random() * pellets.length);
-                const p = pellets[idx];
-                powerUps.push({ x: p.x, y: p.y, type: 'powerup', points: 50 });
-                pellets.splice(idx, 1);
-            }
+        // Find a random empty pellet location
+        if (pellets.length > 0) {
+            const idx = Math.floor(Math.random() * pellets.length);
+            const p = pellets[idx];
+            powerUps.push({ x: p.x, y: p.y, type: 'powerup', points: 50 });
+            pellets.splice(idx, 1);
         }
     }
     

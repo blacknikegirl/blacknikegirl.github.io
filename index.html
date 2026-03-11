@@ -23,6 +23,13 @@
 <main>
   <section class="hero">
     <h1 class="title">Build beautiful<br>websites that<br>feel <span class="highlight">fast</span></h1>
+    
+    <div class="game-container">
+      <div id="gameGrid" class="game-grid"></div>
+      <div id="player" class="player"></div>
+      <p class="game-hint">Use WASD to move • Can't pass through walls</p>
+    </div>
+    
     <a class="cta" href="#works" style="margin-top: 60px;">Look at the works</a>
   </section>
 
@@ -138,5 +145,135 @@
 <footer id="start">
   © 2026 Digikangelane — tehtud armastusega CSS-i vastu
 </footer>
+
+<script>
+// Pac-Man style grid-based movement game
+const GRID_WIDTH = 16;
+const GRID_HEIGHT = 12;
+const TILE_SIZE = 25;
+
+// Create maze
+const maze = [
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1],
+  [1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,1,0,1,1,0,1,1,0,1,1,0,1,0,1],
+  [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+  [1,0,0,0,1,1,1,1,1,1,1,1,0,0,0,1],
+  [1,0,1,0,1,1,1,1,1,1,1,1,0,1,0,1],
+  [1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+
+// Player state - grid-based position
+let playerGridX = 1;
+let playerGridY = 1;
+let dirX = 0;
+let dirY = 0;
+let nextDirX = 0;
+let nextDirY = 0;
+let gameRunning = false;
+
+// Initialize game grid
+function initGame() {
+  const grid = document.getElementById('gameGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  
+  for (let y = 0; y < GRID_HEIGHT; y++) {
+    for (let x = 0; x < GRID_WIDTH; x++) {
+      const tile = document.createElement('div');
+      tile.className = 'game-tile';
+      if (maze[y][x] === 1) {
+        tile.classList.add('wall');
+      }
+      grid.appendChild(tile);
+    }
+  }
+  
+  updatePlayerPosition();
+  gameRunning = true;
+  gameLoop();
+}
+
+function canMoveTo(gridX, gridY) {
+  if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) return false;
+  return maze[gridY] && maze[gridY][gridX] === 0;
+}
+
+function gameLoop() {
+  if (!gameRunning) return;
+  
+  // Try to move in requested direction
+  if (nextDirX !== 0 || nextDirY !== 0) {
+    if (canMoveTo(playerGridX + nextDirX, playerGridY + nextDirY)) {
+      dirX = nextDirX;
+      dirY = nextDirY;
+      nextDirX = 0;
+      nextDirY = 0;
+    }
+  }
+  
+  // Continue moving in current direction
+  if (dirX !== 0 || dirY !== 0) {
+    const nextX = playerGridX + dirX;
+    const nextY = playerGridY + dirY;
+    if (canMoveTo(nextX, nextY)) {
+      playerGridX = nextX;
+      playerGridY = nextY;
+    }
+  }
+  
+  updatePlayerPosition();
+  requestAnimationFrame(gameLoop);
+}
+
+function updatePlayerPosition() {
+  const player = document.getElementById('player');
+  if (!player) return;
+  
+  // Position player at grid cell
+  const pixelX = playerGridX * TILE_SIZE;
+  const pixelY = playerGridY * TILE_SIZE;
+  
+  player.style.left = pixelX + 'px';
+  player.style.top = pixelY + 'px';
+}
+
+// Keyboard controls
+document.addEventListener('keydown', (e) => {
+  const key = e.key.toLowerCase();
+  
+  // Only allow one direction at a time - no diagonals
+  if (key === 'w') {
+    nextDirX = 0;
+    nextDirY = -1;
+    e.preventDefault();
+  } else if (key === 's') {
+    nextDirX = 0;
+    nextDirY = 1;
+    e.preventDefault();
+  } else if (key === 'a') {
+    nextDirX = -1;
+    nextDirY = 0;
+    e.preventDefault();
+  } else if (key === 'd') {
+    nextDirX = 1;
+    nextDirY = 0;
+    e.preventDefault();
+  }
+});
+
+// Initialize on load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGame);
+} else {
+  initGame();
+}
+</script>
 </body>
 </html>
