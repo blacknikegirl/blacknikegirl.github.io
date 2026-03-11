@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle Mouse Follower</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #181301;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: #181301;
+        }
+        
+        /* Control Groups */
+        .control-group {
+            position: fixed;
+            z-index: 10;
+            display: flex;
+            gap: 12px;
+            backdrop-filter: blur(8px);
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            background: rgba(10, 14, 39, 0.85);
+        }
+        
+        /* Top-Left: Materials */
+        #materials-group {
+            top: 16px;
+            left: 16px;
+            flex-direction: column;
+        }
+        
+        /* Top-Right: Wind Controls */
+        #wind-group {
+            top: 16px;
+            right: 16px;
+            flex-direction: column;
+        }
+        
+        /* Bottom-Left: Visualization */
+        #viz-group {
+            bottom: 16px;
+            left: 16px;
+            flex-direction: row;
+        }
+        
+        /* Bottom-Right: Interaction */
+        #interaction-group {
+            bottom: 16px;
+            right: 16px;
+            flex-direction: column;
+        }
+        
+        /* Circular Button Base */
+        .circle-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .circle-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .circle-btn:active::before {
+            width: 200px;
+            height: 200px;
+        }
+        
+        .circle-btn:hover {
+            transform: scale(1.12);
+            box-shadow: 0 6px 24px rgba(0, 217, 255, 0.4);
+            filter: brightness(1.15);
+        }
+        
+        .circle-btn.active {
+            border-color: #fff;
+            box-shadow: 0 0 24px currentColor, inset 0 0 16px rgba(255, 255, 255, 0.2);
+            animation: pulse 0.6s ease-in-out;
+        }
+        
+        /* Material Buttons */
+        .sand-circle {
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            color: #2d2416;
+        }
+        
+        .water-circle {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #fff;
+        }
+        
+        .gas-circle {
+            background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+            color: #fff;
+        }
+        
+        /* Interaction Buttons */
+        .scatter-circle {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: #fff;
+        }
+        
+        .attract-circle {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #fff;
+        }
+        
+        /* Wind Buttons */
+        .wind-circle {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: #fff;
+            width: 52px;
+            height: 52px;
+            font-size: 16px;
+        }
+        
+        .wind-circle.active {
+            background: linear-gradient(135deg, #00f5ff 0%, #00d9ff 100%);
+            animation: glow-pulse 0.8s ease-in-out infinite;
+        }
+        
+        /* Visualization Buttons */
+        .heat-circle {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff;
+        }
+        
+        .heat-circle.active {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .freeze-circle {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff;
+        }
+        
+        .freeze-circle.active {
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+        }
+        
+        /* Effect Button */
+        .organize-circle {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1f2937;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Small Wind Label */
+        .wind-label-small {
+            font-size: 7px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .circle-btn {
+                width: 56px;
+                height: 56px;
+                font-size: 20px;
+            }
+            
+            .wind-circle {
+                width: 48px;
+                height: 48px;
+                font-size: 14px;
+            }
+            
+            .control-group {
+                padding: 10px;
+                gap: 10px;
+            }
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(0, 217, 255, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 217, 255, 0.8), inset 0 0 12px rgba(255, 255, 255, 0.2); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Materials - Top Left -->
+    <div class="control-group" id="materials-group">
+        <button class="circle-btn sand-circle active" onclick="setMaterial('sand')" title="Sand">🏜️</button>
+        <button class="circle-btn water-circle" onclick="setMaterial('water')" title="Water">💧</button>
+        <button class="circle-btn gas-circle" onclick="setMaterial('gas')" title="Gas">☁️</button>
+    </div>
+    
+    <!-- Wind - Top Right -->
+    <div class="control-group" id="wind-group">
+        <button class="circle-btn wind-circle" onclick="setWind(0, -1)" title="Wind Up">▲</button>
+        <button class="circle-btn wind-circle" onclick="setWind(-1, 0)" title="Wind Left">◀</button>
+        <button class="circle-btn wind-circle" onclick="setWind(0, 0)" title="No Wind">●</button>
+        <button class="circle-btn wind-circle" onclick="setWind(1, 0)" title="Wind Right">▶</button>
+        <button class="circle-btn wind-circle" onclick="setWind(0, 1)" title="Wind Down">▼</button>
+    </div>
+    
+    <!-- Visualization - Bottom Left -->
+    <div class="control-group" id="viz-group">
+        <button class="circle-btn heat-circle" onclick="toggleHeatMap()" title="Heat Map">🔥</button>
+        <button class="circle-btn freeze-circle" onclick="toggleTimeFreeze()" title="Freeze">❄️</button>
+    </div>
+    
+    <!-- Interaction + Organize - Bottom Right -->
+    <div class="control-group" id="interaction-group">
+        <button class="circle-btn scatter-circle active" onclick="setBrushMode('scatter')" title="Scatter">✨</button>
+        <button class="circle-btn attract-circle" onclick="setBrushMode('attract')" title="Attract">🧲</button>
+        <button class="circle-btn organize-circle" onclick="startSelfOrganization()" title="Organize">🎨</button>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const CELL_SIZE = 3;
+        const EMPTY = 0;
+        const SAND = 1;
+        const WATER = 2;
+        const GAS = 3;
+
+        const BASE_COLORS = {
+            [SAND]: [[225, 170, 100], [235, 180, 110]],
+            [WATER]: [[25, 120, 220], [35, 140, 235]],
+            [GAS]: [[80, 180, 100], [100, 200, 120]]
+        };
+
+        let cols = 0;
+        let rows = 0;
+        let grid = new Uint8Array(0);
+        let colorR = new Uint8Array(0);
+        let colorG = new Uint8Array(0);
+        let colorB = new Uint8Array(0);
+        let birthFrame = new Uint32Array(0);
+
+        let isMouseDown = false;
+        let mouseX = 0;
+        let mouseY = 0;
+        let currentMaterial = 'sand';
+        let currentBrushMode = 'scatter';
+        const ATTRACT_LOCK_RADIUS = 5;
+        const ORGANIZE_WORD = 'BlackNikeGirl';
+        let organizeMask = new Uint8Array(0);
+        let organizeActive = false;
+        let organizeTicks = 0;
+        let organizeLockFrames = 0;
+        
+        // Wind force state
+        let windX = 0;
+        let windY = 0;
+        
+        // Life & Death system
+        let currentFrame = 0;
+        const PARTICLE_LIFETIME = 600; // 10 seconds at 60fps
+        
+        // Heat map visualization
+        let heatMapEnabled = false;
+        const HEAT_RADIUS = 8; // Radius to check for density
+        
+        // Time freeze
+        let timeFrozen = false;
+
+        // Audio state for procedural collision sounds.
+        let audioCtx = null;
+        let masterGain = null;
+        let lastSoundTime = 0;
+        const SOUND_COOLDOWN_MS = 28;
+
+        function materialToId(material) {
+            if (material === 'sand') return SAND;
+            if (material === 'water') return WATER;
+            return GAS;
+        }
+
+        function index(x, y) {
+            return y * cols + x;
+        }
+
+        function inBounds(x, y) {
+            return x >= 0 && x < cols && y >= 0 && y < rows;
+        }
+
+        function setupGrid() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            cols = Math.floor(canvas.width / CELL_SIZE);
+            rows = Math.floor(canvas.height / CELL_SIZE);
+            grid = new Uint8Array(cols * rows);
+            colorR = new Uint8Array(cols * rows);
+            colorG = new Uint8Array(cols * rows);
+            colorB = new Uint8Array(cols * rows);
+            birthFrame = new Uint32Array(cols * rows);
+            organizeMask = new Uint8Array(cols * rows);
+            organizeActive = false;
+            organizeTicks = 0;
+            organizeLockFrames = 0;
+            currentFrame = 0;
+        }
+
+        function createWordMask(word) {
+            const off = document.createElement('canvas');
+            off.width = cols;
+            off.height = rows;
+            const octx = off.getContext('2d');
+
+            octx.clearRect(0, 0, cols, rows);
+            octx.fillStyle = '#fff';
+            octx.textAlign = 'center';
+            octx.textBaseline = 'middle';
+
+            // Auto-fit long words so the full text stays visible.
+            let fontSize = Math.max(12, Math.floor(rows * 0.22));
+            octx.font = `900 ${fontSize}px Verdana`;
+            while (octx.measureText(word).width > cols * 0.9 && fontSize > 10) {
+                fontSize -= 1;
+                octx.font = `900 ${fontSize}px Verdana`;
+            }
+            octx.fillText(word, Math.floor(cols / 2), Math.floor(rows / 2));
+
+            const data = octx.getImageData(0, 0, cols, rows).data;
+            const mask = new Uint8Array(cols * rows);
+            let count = 0;
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const idx = index(x, y);
+                    const r = data[idx * 4];
+                    const a = data[idx * 4 + 3];
+                    if (a > 20 && r > 20) {
+                        mask[idx] = 1;
+                        count++;
+                    }
+                }
+            }
+
+            return { mask, count };
+        }
+
+        function ensureAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.06;
+                masterGain.connect(audioCtx.destination);
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playThud(intensity) {
+            if (!audioCtx || !masterGain) return;
+            const now = audioCtx.currentTime;
+            const dur = 0.05 + intensity * 0.06;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const filter = audioCtx.createBiquadFilter();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(110 + intensity * 70, now);
+            osc.frequency.exponentialRampToValueAtTime(55, now + dur);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(480 + intensity * 700, now);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.12 + intensity * 0.12, now + 0.005);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+
+            osc.start(now);
+            osc.stop(now + dur + 0.01);
+        }
+
+        function playCrack(intensity) {
+            if (!audioCtx || !masterGain) return;
+            const now = audioCtx.currentTime;
+            const dur = 0.02 + intensity * 0.03;
+
+            const bufferSize = Math.max(64, Math.floor(audioCtx.sampleRate * dur));
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+            }
+
+            const noise = audioCtx.createBufferSource();
+            const filter = audioCtx.createBiquadFilter();
+            const gain = audioCtx.createGain();
+
+            noise.buffer = buffer;
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1200 + intensity * 1800, now);
+            filter.Q.value = 0.8;
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.09 + intensity * 0.14, now + 0.003);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(masterGain);
+
+            noise.start(now);
+            noise.stop(now + dur + 0.005);
+        }
+
+        function triggerCollisionSound(matA, matB, intensity) {
+            if (!audioCtx) return;
+            const nowMs = performance.now();
+            if (nowMs - lastSoundTime < SOUND_COOLDOWN_MS) return;
+            if (Math.random() > 0.22) return;
+            lastSoundTime = nowMs;
+
+            const norm = Math.max(0.08, Math.min(1, intensity));
+            // Harder collisions trend to cracks, softer to thuds.
+            const hard = (matA === SAND && matB === SAND) || (matA === SAND && matB === WATER) || (matA === WATER && matB === SAND);
+            if (hard && Math.random() < 0.45) {
+                playCrack(norm);
+            } else {
+                playThud(norm);
+            }
+        }
+
+        function assignRandomBaseColor(idx, mat) {
+            const palette = BASE_COLORS[mat];
+            const c = palette[Math.floor(Math.random() * palette.length)];
+            colorR[idx] = c[0];
+            colorG[idx] = c[1];
+            colorB[idx] = c[2];
+            birthFrame[idx] = currentFrame;
+        }
+
+        function mixColors(i1, i2, strength = 0.16) {
+            const r1 = colorR[i1], g1 = colorG[i1], b1 = colorB[i1];
+            const r2 = colorR[i2], g2 = colorG[i2], b2 = colorB[i2];
+            const nr = Math.round(r1 * (1 - strength) + r2 * strength);
+            const ng = Math.round(g1 * (1 - strength) + g2 * strength);
+            const nb = Math.round(b1 * (1 - strength) + b2 * strength);
+            colorR[i1] = nr;
+            colorG[i1] = ng;
+            colorB[i1] = nb;
+            colorR[i2] = nr;
+            colorG[i2] = ng;
+            colorB[i2] = nb;
+        }
+
+        function maybeFuse(i1, i2) {
+            if (grid[i1] === EMPTY || grid[i2] === EMPTY) return;
+            const dr = Math.abs(colorR[i1] - colorR[i2]);
+            const dg = Math.abs(colorG[i1] - colorG[i2]);
+            const db = Math.abs(colorB[i1] - colorB[i2]);
+            const delta = dr + dg + db;
+            if (delta < 20) return;
+            triggerCollisionSound(grid[i1], grid[i2], Math.min(1, delta / 255));
+            mixColors(i1, i2, 0.16);
+        }
+
+        window.setMaterial = function(type) {
+            currentMaterial = type;
+            document.querySelectorAll('.material-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.${type}-btn`).classList.add('active');
+        };
+
+        window.setBrushMode = function(mode) {
+            currentBrushMode = mode;
+            document.querySelectorAll('.brush-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.${mode}-btn`).classList.add('active');
+        };
+
+        window.setWind = function(x, y) {
+            windX = x;
+            windY = y;
+            document.querySelectorAll('.wind-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        };
+        
+        window.toggleHeatMap = function() {
+            heatMapEnabled = !heatMapEnabled;
+            const btn = event.target;
+            if (heatMapEnabled) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        };
+        
+        window.toggleTimeFreeze = function() {
+            timeFrozen = !timeFrozen;
+            const btn = event.target;
+            if (timeFrozen) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        };
+
+        function buildWordMask(word) {
+            const built = createWordMask(word);
+            organizeMask = built.mask;
+        }
+
+        function forceWordFormation() {
+            const inside = [];
+            const outside = [];
+
+            for (let i = 0; i < grid.length; i++) {
+                if (organizeMask[i] === 1) inside.push(i);
+                else outside.push(i);
+            }
+
+            const pool = [];
+            for (let i = 0; i < grid.length; i++) {
+                if (grid[i] !== EMPTY) {
+                    pool.push({
+                        mat: grid[i],
+                        r: colorR[i],
+                        g: colorG[i],
+                        b: colorB[i]
+                    });
+                }
+                // Clear all cells before rebuilding the word.
+                grid[i] = EMPTY;
+                colorR[i] = 0;
+                colorG[i] = 0;
+                colorB[i] = 0;
+            }
+
+            // Randomize target fill order so text looks organic.
+            for (let i = inside.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const t = inside[i];
+                inside[i] = inside[j];
+                inside[j] = t;
+            }
+
+            // Fill word cells from existing particle pool first.
+            const fillCount = Math.min(inside.length, pool.length);
+            for (let i = 0; i < fillCount; i++) {
+                const idx = inside[i];
+                const p = pool[i];
+                grid[idx] = p.mat;
+                colorR[idx] = p.r;
+                colorG[idx] = p.g;
+                colorB[idx] = p.b;
+                birthFrame[idx] = currentFrame;
+            }
+
+            // If there were not enough particles, synthesize remaining text cells.
+            for (let i = fillCount; i < inside.length; i++) {
+                const idx = inside[i];
+                const mat = SAND;
+                grid[idx] = mat;
+                assignRandomBaseColor(idx, mat);
+            }
+
+            // Keep outside empty so particles clearly transform into the word.
+            for (let i = 0; i < outside.length; i++) {
+                const idx = outside[i];
+                grid[idx] = EMPTY;
+            }
+        }
+
+        window.startSelfOrganization = function() {
+            buildWordMask(ORGANIZE_WORD);
+            forceWordFormation();
+            organizeActive = false;
+            organizeTicks = 0;
+            organizeLockFrames = 3600;
+        };
+
+        function organizeStep() {
+            if (!organizeActive) return;
+
+            const source = [];
+            const targetEmpty = [];
+            let targetFilled = 0;
+            let targetTotal = 0;
+
+            for (let i = 0; i < grid.length; i++) {
+                if (organizeMask[i] === 1) {
+                    targetTotal++;
+                    if (grid[i] === EMPTY) targetEmpty.push(i);
+                    else targetFilled++;
+                } else if (grid[i] !== EMPTY) {
+                    source.push(i);
+                }
+            }
+
+            if (targetEmpty.length === 0 || source.length === 0) {
+                organizeActive = false;
+                return;
+            }
+
+            const moves = Math.min(900, targetEmpty.length, source.length);
+            for (let m = 0; m < moves; m++) {
+                const sPick = Math.floor(Math.random() * source.length);
+                const tPick = Math.floor(Math.random() * targetEmpty.length);
+                const sIdx = source[sPick];
+                const tIdx = targetEmpty[tPick];
+
+                grid[tIdx] = grid[sIdx];
+                colorR[tIdx] = colorR[sIdx];
+                colorG[tIdx] = colorG[sIdx];
+                colorB[tIdx] = colorB[sIdx];
+                birthFrame[tIdx] = birthFrame[sIdx];
+
+                grid[sIdx] = EMPTY;
+                colorR[sIdx] = 0;
+                colorG[sIdx] = 0;
+                colorB[sIdx] = 0;
+                birthFrame[sIdx] = 0;
+
+                source[sPick] = source[source.length - 1];
+                source.pop();
+                targetEmpty[tPick] = targetEmpty[targetEmpty.length - 1];
+                targetEmpty.pop();
+                if (source.length === 0 || targetEmpty.length === 0) break;
+            }
+
+            organizeTicks++;
+            const fillRatio = targetTotal === 0 ? 1 : targetFilled / targetTotal;
+            if (fillRatio > 0.92 || organizeTicks > 260) {
+                organizeActive = false;
+            }
+        }
+
+        function scatterBrush(px, py) {
+            const cx = Math.floor(px / CELL_SIZE);
+            const cy = Math.floor(py / CELL_SIZE);
+            const radius = currentMaterial === 'water' ? 4 : 3;
+            const amount = currentMaterial === 'water' ? 26 : 16;
+            const mat = materialToId(currentMaterial);
+
+            for (let i = 0; i < amount; i++) {
+                const a = Math.random() * Math.PI * 2;
+                const r = Math.random() * radius;
+                const x = cx + Math.floor(Math.cos(a) * r);
+                const y = cy + Math.floor(Math.sin(a) * r);
+                if (!inBounds(x, y)) continue;
+                const idx = index(x, y);
+
+                // Sand/water displace gas, and overwrite empty.
+                if (grid[idx] === EMPTY || grid[idx] === GAS || mat === GAS) {
+                    grid[idx] = mat;
+                    assignRandomBaseColor(idx, mat);
+                }
+            }
+        }
+
+        function swapCells(x1, y1, x2, y2) {
+            const i1 = index(x1, y1);
+            const i2 = index(x2, y2);
+            const tMat = grid[i1];
+            const tR = colorR[i1];
+            const tG = colorG[i1];
+            const tB = colorB[i1];
+            const tBirth = birthFrame[i1];
+            grid[i1] = grid[i2];
+            colorR[i1] = colorR[i2];
+            colorG[i1] = colorG[i2];
+            colorB[i1] = colorB[i2];
+            birthFrame[i1] = birthFrame[i2];
+            grid[i2] = tMat;
+            colorR[i2] = tR;
+            colorG[i2] = tG;
+            colorB[i2] = tB;
+            birthFrame[i2] = tBirth;
+        }
+
+        function forceBrush(px, py, direction, strength = 1) {
+            const cx = Math.floor(px / CELL_SIZE);
+            const cy = Math.floor(py / CELL_SIZE);
+            const radius = direction === 1 ? 12 : 9;
+            const attempts = direction === 1 ? 520 : 220;
+
+            for (let i = 0; i < attempts; i++) {
+                const ox = Math.floor((Math.random() * 2 - 1) * radius);
+                const oy = Math.floor((Math.random() * 2 - 1) * radius);
+                if (ox * ox + oy * oy > radius * radius) continue;
+
+                const x = cx + ox;
+                const y = cy + oy;
+                if (!inBounds(x, y)) continue;
+
+                const srcIdx = index(x, y);
+                const srcMat = grid[srcIdx];
+                if (srcMat === EMPTY) continue;
+
+                const dx = x - cx;
+                const dy = y - cy;
+                if (dx === 0 && dy === 0) continue;
+
+                const stepX = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
+                const stepY = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
+                const stepScale = direction === 1 ? strength : 1;
+                const moveX = (direction === 1 ? -stepX : stepX) * stepScale;
+                const moveY = (direction === 1 ? -stepY : stepY) * stepScale;
+
+                const targets = [
+                    [x + moveX, y],
+                    [x, y + moveY],
+                    [x + moveX, y + moveY]
+                ];
+
+                for (const target of targets) {
+                    const tx = target[0];
+                    const ty = target[1];
+                    if (!inBounds(tx, ty)) continue;
+
+                    const dstIdx = index(tx, ty);
+                    const dstMat = grid[dstIdx];
+                    if (dstMat === EMPTY || (dstMat === GAS && srcMat !== GAS)) {
+                        swapCells(x, y, tx, ty);
+                        break;
+                    }
+                }
+            }
+        }
+
+        function attractStick(px, py) {
+            const cx = Math.floor(px / CELL_SIZE);
+            const cy = Math.floor(py / CELL_SIZE);
+            const sourceRadius = 10;
+            const targetRadius = ATTRACT_LOCK_RADIUS;
+
+            for (let i = 0; i < 260; i++) {
+                const sax = Math.floor((Math.random() * 2 - 1) * sourceRadius);
+                const say = Math.floor((Math.random() * 2 - 1) * sourceRadius);
+                const sx = cx + sax;
+                const sy = cy + say;
+                if (!inBounds(sx, sy)) continue;
+                const sIdx = index(sx, sy);
+                if (grid[sIdx] === EMPTY) continue;
+
+                const angle = Math.random() * Math.PI * 2;
+                const r = Math.random() * targetRadius;
+                const tx = cx + Math.floor(Math.cos(angle) * r);
+                const ty = cy + Math.floor(Math.sin(angle) * r);
+                if (!inBounds(tx, ty)) continue;
+                const tIdx = index(tx, ty);
+                if (grid[tIdx] !== EMPTY) continue;
+
+                grid[tIdx] = grid[sIdx];
+                colorR[tIdx] = colorR[sIdx];
+                colorG[tIdx] = colorG[sIdx];
+                colorB[tIdx] = colorB[sIdx];
+                birthFrame[tIdx] = birthFrame[sIdx];
+                grid[sIdx] = EMPTY;
+                colorR[sIdx] = 0;
+                colorG[sIdx] = 0;
+                colorB[sIdx] = 0;
+                birthFrame[sIdx] = 0;
+            }
+        }
+
+        function isAttractLockActive() {
+            return isMouseDown && currentBrushMode === 'attract';
+        }
+
+        function inAttractLock(x, y) {
+            if (!isAttractLockActive()) return false;
+            const cx = Math.floor(mouseX / CELL_SIZE);
+            const cy = Math.floor(mouseY / CELL_SIZE);
+            const dx = x - cx;
+            const dy = y - cy;
+            return dx * dx + dy * dy <= ATTRACT_LOCK_RADIUS * ATTRACT_LOCK_RADIUS;
+        }
+
+        function isOrganizationLock(x, y) {
+            if (organizeLockFrames <= 0) return false;
+            return organizeMask[index(x, y)] === 1;
+        }
+
+        function applyBrush(px, py) {
+            if (currentBrushMode === 'scatter') {
+                scatterBrush(px, py);
+                forceBrush(px, py, -1);
+                return;
+            }
+            // Stronger pull for attract mode.
+            forceBrush(px, py, 1, 2);
+            forceBrush(px, py, 1, 2);
+            attractStick(px, py);
+        }
+
+        function canDisplace(s, t) {
+            // Density order: sand > water > gas > empty
+            if (s === SAND) return t === WATER || t === GAS || t === EMPTY;
+            if (s === WATER) return t === GAS || t === EMPTY;
+            if (s === GAS) return t === EMPTY;
+            return false;
+        }
+
+        function updateSand(x, y) {
+            const belowY = y + 1;
+            if (belowY >= rows) return;
+            const belowIdx = index(x, belowY);
+            const below = grid[belowIdx];
+            if (canDisplace(SAND, below)) {
+                swapCells(x, y, x, belowY);
+                return;
+            }
+            maybeFuse(index(x, y), belowIdx);
+
+            const firstLeft = Math.random() < 0.5;
+            const dx1 = firstLeft ? -1 : 1;
+            const dx2 = -dx1;
+
+            const nx1 = x + dx1;
+            if (inBounds(nx1, belowY) && canDisplace(SAND, grid[index(nx1, belowY)])) {
+                swapCells(x, y, nx1, belowY);
+                return;
+            }
+            if (inBounds(nx1, belowY)) maybeFuse(index(x, y), index(nx1, belowY));
+
+            const nx2 = x + dx2;
+            if (inBounds(nx2, belowY) && canDisplace(SAND, grid[index(nx2, belowY)])) {
+                swapCells(x, y, nx2, belowY);
+            }
+            if (inBounds(nx2, belowY)) maybeFuse(index(x, y), index(nx2, belowY));
+        }
+
+        function updateWater(x, y) {
+            const belowY = y + 1;
+            if (belowY < rows && canDisplace(WATER, grid[index(x, belowY)])) {
+                swapCells(x, y, x, belowY);
+                return;
+            }
+            if (belowY < rows) maybeFuse(index(x, y), index(x, belowY));
+
+            const firstLeft = Math.random() < 0.5;
+            const dx1 = firstLeft ? -1 : 1;
+            const dx2 = -dx1;
+
+            const d1x = x + dx1;
+            if (belowY < rows && inBounds(d1x, belowY) && canDisplace(WATER, grid[index(d1x, belowY)])) {
+                swapCells(x, y, d1x, belowY);
+                return;
+            }
+            if (belowY < rows && inBounds(d1x, belowY)) maybeFuse(index(x, y), index(d1x, belowY));
+
+            const d2x = x + dx2;
+            if (belowY < rows && inBounds(d2x, belowY) && canDisplace(WATER, grid[index(d2x, belowY)])) {
+                swapCells(x, y, d2x, belowY);
+                return;
+            }
+            if (belowY < rows && inBounds(d2x, belowY)) maybeFuse(index(x, y), index(d2x, belowY));
+
+            // Horizontal flow to reduce gaps and equalize level.
+            const flowDir = Math.random() < 0.5 ? -1 : 1;
+            for (let step = 1; step <= 3; step++) {
+                const nx = x + flowDir * step;
+                if (!inBounds(nx, y)) break;
+                const target = grid[index(nx, y)];
+                if (canDisplace(WATER, target)) {
+                    swapCells(x, y, nx, y);
+                    return;
+                }
+                maybeFuse(index(x, y), index(nx, y));
+                if (target === SAND || target === WATER) break;
+            }
+
+            for (let step = 1; step <= 2; step++) {
+                const nx = x - flowDir * step;
+                if (!inBounds(nx, y)) break;
+                const target = grid[index(nx, y)];
+                if (canDisplace(WATER, target)) {
+                    swapCells(x, y, nx, y);
+                    return;
+                }
+                maybeFuse(index(x, y), index(nx, y));
+                if (target === SAND || target === WATER) break;
+            }
+        }
+
+        function updateGas(x, y) {
+            const upY = y - 1;
+            if (upY >= 0 && canDisplace(GAS, grid[index(x, upY)])) {
+                swapCells(x, y, x, upY);
+                return;
+            }
+            if (upY >= 0) maybeFuse(index(x, y), index(x, upY));
+
+            const firstLeft = Math.random() < 0.5;
+            const dx1 = firstLeft ? -1 : 1;
+            const dx2 = -dx1;
+
+            const u1x = x + dx1;
+            if (upY >= 0 && inBounds(u1x, upY) && canDisplace(GAS, grid[index(u1x, upY)])) {
+                swapCells(x, y, u1x, upY);
+                return;
+            }
+            if (upY >= 0 && inBounds(u1x, upY)) maybeFuse(index(x, y), index(u1x, upY));
+
+            const u2x = x + dx2;
+            if (upY >= 0 && inBounds(u2x, upY) && canDisplace(GAS, grid[index(u2x, upY)])) {
+                swapCells(x, y, u2x, upY);
+                return;
+            }
+            if (upY >= 0 && inBounds(u2x, upY)) maybeFuse(index(x, y), index(u2x, upY));
+
+            const nx = x + (Math.random() < 0.5 ? -1 : 1);
+            if (inBounds(nx, y) && canDisplace(GAS, grid[index(nx, y)])) {
+                swapCells(x, y, nx, y);
+                return;
+            }
+            if (inBounds(nx, y)) maybeFuse(index(x, y), index(nx, y));
+        }
+
+        function processParticleLifetime() {
+            for (let i = 0; i < grid.length; i++) {
+                if (grid[i] === EMPTY) continue;
+                const age = currentFrame - birthFrame[i];
+                if (age >= PARTICLE_LIFETIME) {
+                    grid[i] = EMPTY;
+                    colorR[i] = 0;
+                    colorG[i] = 0;
+                    colorB[i] = 0;
+                    birthFrame[i] = 0;
+                }
+            }
+        }
+
+        function applyWind() {
+            if (windX === 0 && windY === 0) return;
+            
+            // Process wind in the direction of flow to avoid double-processing
+            const processOrder = [];
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    processOrder.push([x, y]);
+                }
+            }
+            
+            // Shuffle to randomize wind application
+            for (let i = processOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [processOrder[i], processOrder[j]] = [processOrder[j], processOrder[i]];
+            }
+            
+            for (const [x, y] of processOrder) {
+                if (inAttractLock(x, y) || isOrganizationLock(x, y)) continue;
+                
+                const idx = index(x, y);
+                const mat = grid[idx];
+                if (mat === EMPTY) continue;
+                
+                // Wind strength based on material density (lighter = more affected)
+                let strength = 0;
+                if (mat === GAS) strength = 0.9;
+                else if (mat === WATER) strength = 0.5;
+                else if (mat === SAND) strength = 0.25;
+                
+                if (Math.random() > strength) continue;
+                
+                const targetX = x + windX;
+                const targetY = y + windY;
+                
+                if (!inBounds(targetX, targetY)) continue;
+                
+                const targetIdx = index(targetX, targetY);
+                const targetMat = grid[targetIdx];
+                
+                // Can move into empty or displace lighter materials
+                if (targetMat === EMPTY || canDisplace(mat, targetMat)) {
+                    swapCells(x, y, targetX, targetY);
+                }
+            }
+        }
+
+        function simulate() {
+            // Apply wind force before regular physics
+            applyWind();
+            
+            // Bottom-up pass for sand and water.
+            for (let y = rows - 2; y >= 0; y--) {
+                const leftToRight = Math.random() < 0.5;
+                if (leftToRight) {
+                    for (let x = 0; x < cols; x++) {
+                        if (inAttractLock(x, y) || isOrganizationLock(x, y)) continue;
+                        const mat = grid[index(x, y)];
+                        if (mat === SAND) updateSand(x, y);
+                        else if (mat === WATER) updateWater(x, y);
+                    }
+                } else {
+                    for (let x = cols - 1; x >= 0; x--) {
+                        if (inAttractLock(x, y) || isOrganizationLock(x, y)) continue;
+                        const mat = grid[index(x, y)];
+                        if (mat === SAND) updateSand(x, y);
+                        else if (mat === WATER) updateWater(x, y);
+                    }
+                }
+            }
+
+            // Top-down pass for gas.
+            for (let y = 1; y < rows; y++) {
+                const leftToRight = Math.random() < 0.5;
+                if (leftToRight) {
+                    for (let x = 0; x < cols; x++) {
+                        if (inAttractLock(x, y) || isOrganizationLock(x, y)) continue;
+                        if (grid[index(x, y)] === GAS) updateGas(x, y);
+                    }
+                } else {
+                    for (let x = cols - 1; x >= 0; x--) {
+                        if (inAttractLock(x, y) || isOrganizationLock(x, y)) continue;
+                        if (grid[index(x, y)] === GAS) updateGas(x, y);
+                    }
+                }
+            }
+        }
+
+        function calculateDensity(cx, cy) {
+            let count = 0;
+            let total = 0;
+            for (let dy = -HEAT_RADIUS; dy <= HEAT_RADIUS; dy++) {
+                for (let dx = -HEAT_RADIUS; dx <= HEAT_RADIUS; dx++) {
+                    const x = cx + dx;
+                    const y = cy + dy;
+                    if (!inBounds(x, y)) continue;
+                    if (dx * dx + dy * dy > HEAT_RADIUS * HEAT_RADIUS) continue;
+                    total++;
+                    if (grid[index(x, y)] !== EMPTY) count++;
+                }
+            }
+            return total > 0 ? count / total : 0;
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Render particles
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const idx = index(x, y);
+                    const mat = grid[idx];
+                    if (mat === EMPTY) continue;
+                    ctx.fillStyle = `rgb(${colorR[idx]}, ${colorG[idx]}, ${colorB[idx]})`;
+                    ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+            
+            // Render heat map overlay
+            if (heatMapEnabled) {
+                const step = 4; // Sample every 4th cell for performance
+                for (let y = 0; y < rows; y += step) {
+                    for (let x = 0; x < cols; x += step) {
+                        const density = calculateDensity(x, y);
+                        if (density < 0.3) continue; // Skip low density areas
+                        
+                        // Heat color gradient: yellow -> orange -> red
+                        const intensity = Math.min(1, (density - 0.3) / 0.7);
+                        const r = 255;
+                        const g = Math.floor(255 * (1 - intensity * 0.7));
+                        const b = 0;
+                        const alpha = intensity * 0.4;
+                        
+                        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                        const size = step * CELL_SIZE;
+                        ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, size, size);
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            // Only advance time and simulate if not frozen
+            if (!timeFrozen) {
+                currentFrame++;
+                
+                if (isMouseDown) {
+                    applyBrush(mouseX, mouseY);
+                }
+                if (organizeActive) {
+                    organizeStep();
+                }
+                processParticleLifetime();
+                simulate();
+                if (organizeLockFrames > 0) {
+                    organizeLockFrames--;
+                }
+            }
+            
+            // Always render, even when frozen
+            render();
+            requestAnimationFrame(animate);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            ensureAudio();
+            isMouseDown = true;
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+            applyBrush(mouseX, mouseY);
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        window.addEventListener('resize', () => {
+            setupGrid();
+        });
+
+        setupGrid();
+        animate();
+    </script>
+</body>
+</html>
