@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Synth - Drawing Canvas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0f0f1e;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: #1a1a2e;
+            cursor: crosshair;
+        }
+
+        #ui {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 10;
+            display: flex;
+            gap: 0;
+            flex-direction: column;
+            background: rgba(15, 15, 30, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 217, 255, 0.2);
+        }
+
+        .title {
+            color: #00d9ff;
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            text-shadow: 0 0 10px rgba(0, 217, 255, 0.8), 0 0 20px rgba(0, 217, 255, 0.4);
+            text-align: center;
+        }
+
+        .ui-section {
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(0, 217, 255, 0.2);
+        }
+
+        .ui-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-label {
+            color: #00ffaa;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        button {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #00d9ff 0%, #ff00ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.3);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 217, 255, 0.6), 0 0 15px rgba(0, 217, 255, 0.4);
+            filter: brightness(1.15);
+        }
+
+        button:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .brush-size {
+            color: #00d9ff;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 120px;
+        }
+
+        input[type="range"] {
+            width: 120px;
+            cursor: pointer;
+            accent-color: #ff00ff;
+        }
+
+        #stats {
+            color: #00ffaa;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 0;
+            opacity: 0.9;
+            text-shadow: 0 0 8px rgba(0, 255, 170, 0.4);
+            padding: 8px 12px;
+            background: rgba(0, 255, 170, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid #00ffaa;
+        }
+
+        .instrument-selector {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 0;
+        }
+
+        .instrument-btn {
+            flex: 1;
+            padding: 9px 8px;
+            font-size: 11px;
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            border-radius: 5px;
+            transition: all 0.25s ease;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .instrument-btn.active {
+            border-color: #fff;
+            box-shadow: 0 0 12px currentColor, inset 0 0 8px rgba(255, 255, 255, 0.2);
+            filter: brightness(1.3);
+            transform: scale(1.05);
+        }
+
+        .bass-btn {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%) !important;
+            color: #fff;
+        }
+
+        .piano-btn {
+            background: linear-gradient(135deg, #4488ff 0%, #0044cc 100%) !important;
+            color: #fff;
+        }
+
+        .synth-btn {
+            background: linear-gradient(135deg, #ffdd44 0%, #ffaa00 100%) !important;
+            color: #1a1a1a;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mode-buttons button {
+            flex: 1;
+            padding: 9px 12px;
+            font-size: 11px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+            padding: 9px 12px;
+            font-size: 11px;
+        }
+
+        .mode-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ffaa;
+            box-shadow: 0 0 8px #00ffaa;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="title">⚡ NEURAL SYNTH ⚡</div>
+
+        <div class="ui-section">
+            <div class="section-label">🎹 Instrument</div>
+            <div class="instrument-selector">
+                <button class="instrument-btn bass-btn active" data-instrument="bass" title="Bass - Aggressive & Deep">BASS</button>
+                <button class="instrument-btn piano-btn" data-instrument="piano" title="Piano - Soft & Melodic">PIANO</button>
+                <button class="instrument-btn synth-btn" data-instrument="synth" title="Synth - Bright & Digital">SYNTH</button>
+            </div>
+        </div>
+
+        <div class="ui-section">
+            <div class="section-label">🎨 Drawing Modes</div>
+            <div class="mode-buttons">
+                <button id="drawBtn" style="background: linear-gradient(135deg, #00d9ff 0%, #00d9ff 100%); border: 2px solid rgba(0, 217, 255, 1);">🖌️ DRAW</button>
+                <button id="magnetBtn" style="background: linear-gradient(135deg, #ff00ff 0%, #ff00ff 100%); border: 2px solid rgba(255, 0, 255, 0.3);">🧲 MAGNET</button>
+                <button id="symmetryBtn" style="background: linear-gradient(135deg, #00ff88 0%, #00ff88 100%); border: 2px solid rgba(0, 255, 136, 0.3);">✦ MIRROR</button>
+            </div>
+        </div>
+
+        <div class="ui-section">
+            <div class="section-label">🎚️ Effects & Actions</div>
+            <div class="action-buttons">
+                <button id="recordBtn" style="background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%); border: 2px solid rgba(255, 68, 68, 0.3);">⏺️ REC</button>
+                <button id="shakeBtn" style="background: linear-gradient(135deg, #ffaa00 0%, #ff6600 100%); border: 2px solid rgba(255, 170, 0, 0.3);">✨ MAGIC</button>
+                <button id="vibeBtn" style="background: linear-gradient(135deg, #00ffff 0%, #00aa88 100%); border: 2px solid rgba(0, 255, 200, 0.3);">🎵 VIBE</button>
+                <button id="clearBtn" style="background: linear-gradient(135deg, #ff0066 0%, #ff4488 100%); border: 2px solid rgba(255, 0, 100, 0.3);">🗑️ CLEAR</button>
+            </div>
+        </div>
+
+        <div id="stats">Bass</div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const clearBtn = document.getElementById('clearBtn');
+        const shakeBtn = document.getElementById('shakeBtn');
+        const vibeBtn = document.getElementById('vibeBtn');
+        const statsDiv = document.getElementById('stats');
+        
+        // Fixed brush size
+        const BRUSH_SIZE = 8;
+        const instrumentBtns = document.querySelectorAll('.instrument-btn');
+
+        // Current instrument
+        let currentInstrument = 'bass';
+
+        // Instrument button handlers
+        instrumentBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                instrumentBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentInstrument = btn.dataset.instrument;
+                statsDiv.textContent = currentInstrument.toUpperCase();
+            });
+        });
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Drawing variables
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let lastMoveTime = Date.now();
+        const MIN_SPEED_VOLUME = 0.05; // Minimum volume at slow speeds
+        const MAX_SPEED_VOLUME = 0.25; // Maximum volume at fast speeds
+        const SPEED_THRESHOLD = 5; // Pixels per ms for max volume
+
+        // Echo Trails system
+        const trails = [];
+        const TRAIL_LIFETIME = 2000; // 2 seconds fade out - slower
+        const scatterParticles = []; // Particles for shake scatter effect
+        let animationId = null;
+        // Gravity Loops system
+        let gravityMode = false;
+        let symmetryMode = false;
+        const magnetPoints = [];
+        const particles = [];
+        const PARTICLE_COUNT_PER_MAGNET = 3;
+        const ORBIT_SPEED = 0.02;
+        
+        // Record & Loop system
+        let isRecording = false;
+        let isLooping = false;
+        let recordingData = [];
+        let recordStartTime = 0;
+        const RECORD_DURATION = 5000; // 5 seconds
+        let playbackTime = 0;
+        // Audio variables
+        let audioContext = null;
+        let oscillator = null;
+        let gainNode = null;
+        let ambientOscillator = null;
+        let ambientGain = null;
+        let ambientFilter = null;
+        let isVibeActive = false;
+
+        // Instrument configurations
+        const instruments = {
+            bass: {
+                type: 'sawtooth',
+                freqRange: [60, 200],
+                attack: 0.02,
+                decay: 0.8,
+                colors: { from: 'rgba(255, 68, 68, ', mid: 'rgba(180, 0, 0, ', to: 'rgba(100, 0, 0, ' }
+            },
+            piano: {
+                type: 'sine',
+                freqRange: [200, 800],
+                attack: 0.01,
+                decay: 0.8,
+                colors: { from: 'rgba(68, 136, 255, ', mid: 'rgba(0, 68, 200, ', to: 'rgba(0, 34, 150, ' }
+            },
+            synth: {
+                type: 'square',
+                freqRange: [400, 1200],
+                attack: 0.005,
+                decay: 0.8,
+                colors: { from: 'rgba(255, 221, 68, ', mid: 'rgba(255, 170, 0, ', to: 'rgba(200, 120, 0, ' }
+            }
+        };
+
+        // Get current instrument config
+        function getInstrumentConfig() {
+            return instruments[currentInstrument];
+        }
+
+        // Initialize audio context
+        function initAudio() {
+            if (audioContext) return;
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioContext.createGain();
+            gainNode.connect(audioContext.destination);
+        }
+
+        // Start audio playback
+        function startAudio() {
+            initAudio();
+            if (oscillator) return; // Already playing
+
+            const config = getInstrumentConfig();
+            oscillator = audioContext.createOscillator();
+            const audioGain = audioContext.createGain();
+
+            oscillator.type = config.type;
+            oscillator.frequency.value = 440; // Default pitch
+
+            audioGain.gain.setValueAtTime(0, audioContext.currentTime);
+            audioGain.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + config.attack);
+            
+            // Connect oscillator -> gain -> destination
+            oscillator.connect(audioGain);
+            audioGain.connect(audioContext.destination);
+            
+            // Store this gain for later updates
+            gainNode = audioGain;
+            
+            oscillator.start();
+            startTrailAnimation();
+        }
+
+        // Stop audio playback
+        function stopAudio() {
+            if (oscillator && gainNode) {
+                const config = getInstrumentConfig();
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + config.decay);
+                oscillator.stop(audioContext.currentTime + config.decay);
+                oscillator = null;
+            }
+        }
+
+        // Calculate visual density (amount of content on screen)
+        function getVisualDensity() {
+            const totalVisuals = trails.length + particles.length + scatterParticles.length;
+            return Math.min(totalVisuals / 25, 1); // Normalize 0-1 (max 25 items - more sensitive)
+        }
+
+        // Start background ambient vibe
+        function startAmbientVibe() {
+            if (ambientOscillator) return; // Already playing
+            initAudio();
+            
+            // Create oscillator for ambient tone
+            ambientOscillator = audioContext.createOscillator();
+            ambientGain = audioContext.createGain();
+            ambientFilter = audioContext.createBiquadFilter();
+            
+            // Set up oscillator - sawtooth for richer texture
+            ambientOscillator.type = 'sawtooth';
+            ambientOscillator.frequency.value = 40; // Even deeper bass
+            
+            // Low-pass filter for smooth, atmospheric sound
+            ambientFilter.type = 'lowpass';
+            ambientFilter.frequency.value = 150;
+            ambientFilter.Q.value = 0.7;
+            
+            // Start with almost silent volume
+            ambientGain.gain.setValueAtTime(0.001, audioContext.currentTime);
+            
+            // Connect: oscillator -> filter -> gain -> destination
+            ambientOscillator.connect(ambientFilter);
+            ambientFilter.connect(ambientGain);
+            ambientGain.connect(audioContext.destination);
+            
+            ambientOscillator.start();
+            isVibeActive = true;
+            vibeBtn.style.borderColor = 'rgba(0, 255, 200, 1)';
+        }
+
+        // Stop background ambient vibe
+        function stopAmbientVibe() {
+            if (ambientOscillator) {
+                ambientGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+                ambientOscillator.stop(audioContext.currentTime + 0.2);
+                ambientOscillator = null;
+                ambientGain = null;
+                ambientFilter = null;
+            }
+            isVibeActive = false;
+            vibeBtn.style.borderColor = 'rgba(0, 255, 200, 0.3)';
+        }
+
+        // Update ambient vibe based on visual density
+        function updateAmbientVibe() {
+            if (!isVibeActive || !ambientOscillator) return;
+            
+            const density = getVisualDensity();
+            
+            // Sound depends HEAVILY on amount drawn - quiet overall
+            // No drawing = nearly silent, lots of drawing = still quiet but present
+            const targetVolume = 0.001 + density * 0.03; // 0.001 to 0.031 (very quiet range)
+            const targetFreq = 40 + density * 100; // 40Hz to 140Hz (subtle range)
+            const targetFilterFreq = 120 + density * 200; // 120Hz to 320Hz (gradual opening)
+            
+            // Smooth updates
+            ambientGain.gain.linearRampToValueAtTime(targetVolume, audioContext.currentTime + 0.1);
+            ambientOscillator.frequency.linearRampToValueAtTime(targetFreq, audioContext.currentTime + 0.1);
+            ambientFilter.frequency.linearRampToValueAtTime(targetFilterFreq, audioContext.currentTime + 0.1);
+        }
+
+        // Start trail animation loop
+        function startTrailAnimation() {
+            if (animationId) return;
+            
+            function animate() {
+                updateTrails();
+                updateAmbientVibe();
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Toggle mode functions
+        function setDrawMode() {
+            gravityMode = false;
+            symmetryMode = false;
+            statsDiv.textContent = 'DRAW MODE';
+            document.getElementById('drawBtn').style.borderColor = 'rgba(0, 217, 255, 1)';
+            document.getElementById('magnetBtn').style.borderColor = 'rgba(255, 0, 255, 0.3)';
+            document.getElementById('symmetryBtn').style.borderColor = 'rgba(0, 255, 136, 0.3)';
+            canvas.style.cursor = 'crosshair';
+        }
+
+        function setMagnetMode() {
+            gravityMode = true;
+            symmetryMode = false;
+            statsDiv.textContent = 'MAGNET MODE - Click to place magnets';
+            document.getElementById('drawBtn').style.borderColor = 'rgba(0, 217, 255, 0.3)';
+            document.getElementById('magnetBtn').style.borderColor = 'rgba(255, 0, 255, 1)';
+            document.getElementById('symmetryBtn').style.borderColor = 'rgba(0, 255, 136, 0.3)';
+            canvas.style.cursor = 'crosshair';
+            isDrawing = false;
+            // Start animation loop to show magnets
+            if (!animationId) startTrailAnimation();
+        }
+        
+        function setSymmetryMode() {
+            gravityMode = false;
+            symmetryMode = true;
+            statsDiv.textContent = 'SYMMETRY MODE - 4-way reflection';
+            document.getElementById('drawBtn').style.borderColor = 'rgba(0, 217, 255, 0.3)';
+            document.getElementById('magnetBtn').style.borderColor = 'rgba(255, 0, 255, 0.3)';
+            document.getElementById('symmetryBtn').style.borderColor = 'rgba(0, 255, 136, 1)';
+            canvas.style.cursor = 'crosshair';
+        }
+
+        // Place magnet point
+        function addMagnetPoint(x, y) {
+            const magnetPoint = {
+                x,
+                y,
+                radius: 60,
+                intensity: 0.5
+            };
+            magnetPoints.push(magnetPoint);
+            
+            // Create particles around this magnet
+            for (let i = 0; i < PARTICLE_COUNT_PER_MAGNET; i++) {
+                const angle = (Math.PI * 2 / PARTICLE_COUNT_PER_MAGNET) * i;
+                particles.push({
+                    magnetIndex: magnetPoints.length - 1,
+                    angle: angle,
+                    distance: magnetPoint.radius * 0.6,
+                    speed: 0.01 + Math.random() * 0.01,
+                    frequency: 200 + i * 150
+                });
+            }
+        }
+
+        // Update gravity loop particles and audio
+        function updateGravityLoops() {
+            particles.forEach((particle) => {
+                const magnet = magnetPoints[particle.magnetIndex];
+                if (!magnet) return;
+                
+                // Update particle orbit
+                particle.angle += particle.speed;
+                const x = magnet.x + Math.cos(particle.angle) * particle.distance;
+                const y = magnet.y + Math.sin(particle.angle) * particle.distance;
+                
+                // Generate sound based on particle position
+                if (!oscillator) {
+                    initAudio();
+                    startAudio();
+                }
+                
+                // Modulate frequency based on particle angle
+                const config = getInstrumentConfig();
+                const [minFreq, maxFreq] = config.freqRange;
+                const normalizedAngle = (particle.angle % (Math.PI * 2)) / (Math.PI * 2);
+                const frequency = minFreq + (normalizedAngle * (maxFreq - minFreq));
+                oscillator.frequency.setTargetAtTime(frequency, audioContext.currentTime, 0.05);
+            });
+        }
+
+        // Draw gravity loops visualization
+        function drawGravityLoops() {
+            // Draw magnet points
+            magnetPoints.forEach((magnet) => {
+                ctx.strokeStyle = 'rgba(0, 217, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(magnet.x, magnet.y, magnet.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Draw magnet center
+                ctx.fillStyle = 'rgba(0, 217, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(magnet.x, magnet.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw orbiting particles
+            particles.forEach((particle, idx) => {
+                const magnet = magnetPoints[particle.magnetIndex];
+                if (!magnet) return;
+                
+                const x = magnet.x + Math.cos(particle.angle) * particle.distance;
+                const y = magnet.y + Math.sin(particle.angle) * particle.distance;
+                
+                // Particle glow
+                const config = getInstrumentConfig();
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, 12);
+                gradient.addColorStop(0, `${config.colors.from}0.9)`);
+                gradient.addColorStop(1, `${config.colors.to}0.3)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Orbit trail
+                ctx.strokeStyle = `${config.colors.mid}0.4)`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(magnet.x, magnet.y, particle.distance, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+        }
+
+        // Add trail with 4-way symmetry if enabled
+        function addSymmetricalTrail(x, y, size, config) {
+            addTrail(x, y, size, config);
+            
+            if (symmetryMode) {
+                // Horizontal reflection
+                addTrail(canvas.width - x, y, size, config);
+                // Vertical reflection
+                addTrail(x, canvas.height - y, size, config);
+                // Both reflections
+                addTrail(canvas.width - x, canvas.height - y, size, config);
+            }
+        }
+        
+        // Record trail data for looping
+        function recordTrail(x, y, size, config) {
+            if (!isRecording) return;
+            
+            const timestamp = Date.now() - recordStartTime;
+            if (timestamp > RECORD_DURATION) return; // Stop recording after 5 seconds
+            
+            recordingData.push({
+                type: 'trail',
+                timestamp,
+                x,
+                y,
+                size,
+                config,
+                frequency: oscillator ? oscillator.frequency.value : 440,
+                gain: gainNode ? gainNode.gain.value : 0.15
+            });
+        }
+        
+        // Start recording
+        function startRecording() {
+            stopAudio(); // Stop any existing audio
+            isRecording = true;
+            isLooping = false;
+            recordingData = [];
+            recordStartTime = Date.now();
+            document.getElementById('recordBtn').style.borderColor = 'rgba(255, 68, 68, 1)';
+            document.getElementById('recordBtn').style.filter = 'brightness(1.2)';
+            statsDiv.textContent = 'RECORDING...';
+            
+            // Stop recording after 5 seconds
+            setTimeout(() => {
+                stopRecording();
+            }, RECORD_DURATION);
+        }
+        
+        // Stop recording and start looping
+        function stopRecording() {
+            if (!isRecording) return;
+            isRecording = false;
+            isLooping = true;
+            playbackTime = 0;
+            document.getElementById('recordBtn').style.borderColor = 'rgba(255, 68, 68, 1)';
+            document.getElementById('recordBtn').textContent = 'LOOPING';
+            statsDiv.textContent = `LOOP: ${recordingData.length} events`;
+        }
+        
+        // Stop looping
+        function stopLooping() {
+            isLooping = false;
+            recordingData = [];
+            playbackTime = 0;
+            stopAudio();
+            document.getElementById('recordBtn').style.borderColor = 'rgba(255, 68, 68, 0.3)';
+            document.getElementById('recordBtn').style.filter = 'brightness(1)';
+            document.getElementById('recordBtn').textContent = 'RECORD';
+            statsDiv.textContent = 'Ready';
+        }
+        
+        // Playback recorded data with audio
+        function playbackLoop() {
+            if (!isLooping || recordingData.length === 0) return;
+            
+            // Start audio if not already playing
+            if (!oscillator) {
+                startAudio();
+            }
+            
+            const config = getInstrumentConfig();
+            
+            // Find all events at current playback time (with tolerance for frame skipping)
+            recordingData.forEach(event => {
+                if (Math.abs(event.timestamp - playbackTime) < 20) {
+                    if (event.type === 'trail') {
+                        // Replay the trail visually
+                        addTrail(event.x, event.y, event.size, event.config);
+                        
+                        // Replay the audio - update frequency and gain
+                        if (oscillator && gainNode) {
+                            oscillator.frequency.setTargetAtTime(event.frequency, audioContext.currentTime, 0.05);
+                            gainNode.gain.setTargetAtTime(event.gain, audioContext.currentTime, 0.05);
+                        }
+                    }
+                }
+            });
+            
+            // Increment playback time
+            playbackTime += 16; // ~60fps
+            
+            // Loop back to start
+            if (playbackTime > RECORD_DURATION) {
+                playbackTime = 0;
+            }
+        }
+        
+        // Add trail segment with waveform data
+        function addTrail(x, y, size, config) {
+            trails.push({
+                x,
+                y,
+                size,
+                config,
+                createdAt: Date.now(),
+                frequency: oscillator ? oscillator.frequency.value : 440,
+                gain: gainNode ? gainNode.gain.value : 0.15
+            });
+        }
+        
+        // Draw waveform oscillogram - simplified
+        function drawWaveform(x, y, size, frequency, gain, opacity, waveType) {
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+            
+            // Create wavy pattern based on frequency
+            const waves = Math.floor(frequency / 100);
+            const pattern = Math.sin(Date.now() * 0.001) * waves;
+            
+            // Set colors based on instrument type
+            let color1, color2, color3;
+            if (waveType === 'sawtooth') { // Bass - Red
+                color1 = `rgba(255, 68, 68, ${opacity * 0.9})`;
+                color2 = `rgba(200, 50, 50, ${opacity * 0.5})`;
+                color3 = `rgba(100, 30, 30, ${opacity * 0.1})`;
+            } else if (waveType === 'sine') { // Piano - Blue
+                color1 = `rgba(68, 136, 255, ${opacity * 0.9})`;
+                color2 = `rgba(50, 100, 200, ${opacity * 0.5})`;
+                color3 = `rgba(30, 60, 100, ${opacity * 0.1})`;
+            } else { // Synth - Yellow (square)
+                color1 = `rgba(255, 221, 68, ${opacity * 0.9})`;
+                color2 = `rgba(200, 170, 50, ${opacity * 0.5})`;
+                color3 = `rgba(100, 85, 30, ${opacity * 0.1})`;
+            }
+            
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(0.5, color2);
+            gradient.addColorStop(1, color3);
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            
+            // Draw wavy circle
+            for (let angle = 0; angle < Math.PI * 2; angle += 0.1) {
+                const wave = Math.sin(angle * waves + pattern) * size * 0.1;
+                const px = x + Math.cos(angle) * (size + wave);
+                const py = y + Math.sin(angle) * (size + wave);
+                
+                if (angle === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Update and draw trails
+        function updateTrails() {
+            const now = Date.now();
+            
+            // Clear canvas
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (gravityMode) {
+                // Gravity loops rendering - update particle positions
+                updateGravityLoops();
+            } else {
+                // Trail rendering
+                // Update trails - fade and remove old ones
+                for (let i = trails.length - 1; i >= 0; i--) {
+                    const trail = trails[i];
+                    const age = now - trail.createdAt;
+                    const progress = age / TRAIL_LIFETIME;
+                    
+                    if (progress >= 1) {
+                        trails.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // Draw trail with waveform brush
+                    const opacity = 1 - progress;
+                    const config = trail.config;
+                    const waveType = config.type;
+                    
+                    // Draw simplified waveform
+                    drawWaveform(
+                        trail.x, 
+                        trail.y, 
+                        trail.size * (1 - progress * 0.3),
+                        trail.frequency,
+                        trail.gain,
+                        opacity,
+                        waveType
+                    );
+                }
+                
+                // Fade audio volume with trails
+                if (gainNode && trails.length === 0) {
+                    gainNode.gain.value = 0;
+                }
+            }
+            
+            // Update and render scatter particles (Magic Board effect)
+            updateScatterParticles();
+            
+            // Always draw magnets on top (they persist across modes)
+            drawGravityLoops();
+        }
+
+        // Update volume and pitch based on cursor speed
+        function updateSpeedVolume(currentX, currentY, currentTime) {
+            if (!oscillator || !gainNode) return;
+            
+            const config = getInstrumentConfig();
+            const distance = Math.sqrt((currentX - lastX) ** 2 + (currentY - lastY) ** 2);
+            const timeDelta = Math.max(currentTime - lastMoveTime, 1); // Avoid division by zero
+            const speed = distance / timeDelta; // Pixels per millisecond
+            
+            // Map speed to volume (0 = min, SPEED_THRESHOLD = max)
+            const normalizedSpeed = Math.min(speed / SPEED_THRESHOLD, 1);
+            const volumeMultiplier = MIN_SPEED_VOLUME + (normalizedSpeed * (MAX_SPEED_VOLUME - MIN_SPEED_VOLUME));
+            
+            // Apply volume based on speed
+            gainNode.gain.value = volumeMultiplier;
+            
+            // Add sharpness: increase frequency slightly at high speeds for a brighter tone
+            if (oscillator && speed > 2) {
+                const [minFreq, maxFreq] = config.freqRange;
+                const normalizedY = lastY / canvas.height;
+                const baseFreq = maxFreq - (normalizedY * (maxFreq - minFreq));
+                const sharpnessBoost = normalizedSpeed * 150; // Add up to 150Hz at max speed
+                oscillator.frequency.setTargetAtTime(baseFreq + sharpnessBoost, audioContext.currentTime, 0.01);
+            }
+        }
+
+        // Update pitch based on Y position
+        function updatePitch(yPosition) {
+            if (!oscillator) return;
+
+            const config = getInstrumentConfig();
+            const [minFreq, maxFreq] = config.freqRange;
+            
+            // Map Y position to frequency (top = high pitch, bottom = low pitch)
+            const normalizedY = yPosition / canvas.height;
+            const frequency = maxFreq - (normalizedY * (maxFreq - minFreq));
+            
+            oscillator.frequency.setTargetAtTime(frequency, audioContext.currentTime, 0.01);
+        }
+
+        // Canvas click events
+        canvas.addEventListener('click', (e) => {
+            if (gravityMode) {
+                // Start animation loop if not already running
+                if (!animationId) startTrailAnimation();
+                addMagnetPoint(e.clientX, e.clientY);
+                statsDiv.textContent = `Magnets: ${magnetPoints.length}`;
+            }
+        });
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            if (gravityMode) return; // Ignore in gravity mode
+            isDrawing = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            statsDiv.textContent = 'Echo Trails Active';
+            startAudio();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (gravityMode) return; // Ignore in gravity mode
+            if (!isDrawing) return;
+
+            const x = e.clientX;
+            const y = e.clientY;
+            const config = getInstrumentConfig();
+            const now = Date.now();
+
+            // Add trail segments instead of drawing directly
+            const distance = Math.sqrt((x - lastX) ** 2 + (y - lastY) ** 2);
+            const steps = Math.ceil(distance);
+            
+            for (let i = 0; i < steps; i++) {
+                const t = steps > 0 ? i / steps : 0;
+                const segX = lastX + (x - lastX) * t;
+                const segY = lastY + (y - lastY) * t;
+                addSymmetricalTrail(segX, segY, BRUSH_SIZE, config);
+                recordTrail(segX, segY, BRUSH_SIZE, config);
+            }
+
+            // Update speed-based volume and pitch sharpness
+            updateSpeedVolume(x, y, now);
+            
+            // Update pitch based on Y position
+            updatePitch(y);
+
+            lastX = x;
+            lastY = y;
+            lastMoveTime = Date.now();
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (gravityMode) return;
+            isDrawing = false;
+            isDrawing = false;
+            statsDiv.textContent = 'Ready';
+            stopAudio();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDrawing = false;
+            statsDiv.textContent = 'Trails Fading...';
+            stopAudio();
+        });
+
+
+
+        // Playback loop animation
+        setInterval(() => {
+            playbackLoop();
+        }, 16);
+        
+        // Record button handler
+        const recordBtn = document.getElementById('recordBtn');
+        recordBtn.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else if (isLooping) {
+                stopLooping();
+            } else {
+                startRecording();
+            }
+        });
+        
+        // Magic Board Scatter Effect
+        function createScatterEffect() {
+            if (gravityMode) {
+                // MAGNETIC MODE: Particles explode away from magnets
+                if (particles.length === 0) {
+                    statsDiv.textContent = 'No particles! Place magnets first.';
+                    setTimeout(() => {
+                        statsDiv.textContent = 'MAGNET MODE - Click to place magnets';
+                    }, 1500);
+                    return;
+                }
+                
+                // Convert orbiting particles to flying scatter particles
+                particles.forEach(particle => {
+                    const magnet = magnetPoints[particle.magnetIndex];
+                    if (magnet) {
+                        const explosionAngle = Math.atan2(
+                            magnet.y - particle.y || Math.random() - 0.5,
+                            magnet.x - particle.x || Math.random() - 0.5
+                        );
+                        const explosionSpeed = 3 + Math.random() * 5;
+                        
+                        scatterParticles.push({
+                            x: magnet.x,
+                            y: magnet.y,
+                            vx: Math.cos(explosionAngle) * explosionSpeed,
+                            vy: Math.sin(explosionAngle) * explosionSpeed,
+                            size: 4 + Math.random() * 3,
+                            life: 1,
+                            frequency: particle.frequency,
+                            gain: 0.2,
+                            config: { type: 'square' }, // Use synth yellow for magnet particles
+                            createdAt: Date.now()
+                        });
+                    }
+                });
+                
+                // Clear particles and magnets
+                particles.length = 0;
+                magnetPoints.length = 0;
+                
+                statsDiv.textContent = '⚡ MAGNETIC EXPLOSION ⚡';
+            } else {
+                // DRAW/SYMMETRY MODE: Trails scatter like sparks
+                if (trails.length === 0) {
+                    statsDiv.textContent = 'No trails to scatter! Draw first.';
+                    setTimeout(() => {
+                        statsDiv.textContent = 'DRAW MODE';
+                    }, 1500);
+                    return;
+                }
+                
+                // Convert trails to scatter particles that fly outward
+                trails.forEach(trail => {
+                    for (let i = 0; i < 3; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 1 + Math.random() * 2;
+                        scatterParticles.push({
+                            x: trail.x,
+                            y: trail.y,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            size: trail.size * (0.1 + Math.random() * 0.2),
+                            life: 1,
+                            frequency: trail.frequency,
+                            gain: trail.gain,
+                            config: trail.config,
+                            createdAt: Date.now()
+                        });
+                    }
+                });
+                
+                // Clear original trails
+                trails.length = 0;
+                
+                statsDiv.textContent = '✨ MAGIC SHAKE ✨';
+            }
+            
+            // Fade audio quickly
+            if (gainNode && audioContext) {
+                gainNode.gain.setTargetAtTime(0, audioContext.currentTime, 0.1);
+            }
+            
+            setTimeout(() => {
+                statsDiv.textContent = gravityMode ? 'MAGNET MODE - Click to place magnets' : 'DRAW MODE';
+            }, 1000);
+        }
+        
+        // Update scatter particles
+        function updateScatterParticles() {
+            for (let i = scatterParticles.length - 1; i >= 0; i--) {
+                const p = scatterParticles[i];
+                p.life -= 0.03; // Fade faster
+                
+                if (p.life <= 0) {
+                    scatterParticles.splice(i, 1);
+                    continue;
+                }
+                
+                // Physics: velocity + acceleration (gravity)
+                p.vy += 0.15; // Gravity
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                // Draw scatter particle
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                
+                // Color based on instrument
+                let color1, color2;
+                if (p.config.type === 'sawtooth') { // Bass Red
+                    color1 = `rgba(255, 100, 100, ${p.life * 0.8})`;
+                    color2 = `rgba(255, 68, 68, ${p.life * 0.3})`;
+                } else if (p.config.type === 'sine') { // Piano Blue
+                    color1 = `rgba(100, 150, 255, ${p.life * 0.8})`;
+                    color2 = `rgba(68, 136, 255, ${p.life * 0.3})`;
+                } else { // Synth Yellow
+                    color1 = `rgba(255, 220, 100, ${p.life * 0.8})`;
+                    color2 = `rgba(255, 221, 68, ${p.life * 0.3})`;
+                }
+                
+                gradient.addColorStop(0, color1);
+                gradient.addColorStop(1, color2);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Shake detection setup
+        let lastShakeTime = 0;
+        const SHAKE_THRESHOLD = 20; // Acceleration threshold
+        const SHAKE_TIMEOUT = 500; // Minimum time between shakes (ms)
+        
+        if (window.DeviceMotionEvent) {
+            window.addEventListener('devicemotion', (event) => {
+                const now = Date.now();
+                if (now - lastShakeTime < SHAKE_TIMEOUT) return;
+                
+                const acc = event.acceleration;
+                const magnitude = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+                
+                if (magnitude > SHAKE_THRESHOLD) {
+                    lastShakeTime = now;
+                    createScatterEffect();
+                }
+            });
+        }
+        
+        // Mode buttons
+        const drawBtn = document.getElementById('drawBtn');
+        const magnetBtn = document.getElementById('magnetBtn');
+        const symmetryBtn = document.getElementById('symmetryBtn');
+        if (drawBtn) drawBtn.addEventListener('click', setDrawMode);
+        if (magnetBtn) magnetBtn.addEventListener('click', setMagnetMode);
+        if (symmetryBtn) symmetryBtn.addEventListener('click', setSymmetryMode);
+        setDrawMode(); // Start in draw mode
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            trails.length = 0;
+            scatterParticles.length = 0;
+            magnetPoints.length = 0;
+            particles.length = 0;
+            isDrawing = false;
+            stopAudio();
+            stopAmbientVibe();
+            statsDiv.textContent = 'Canvas Cleared';
+            setTimeout(() => {
+                statsDiv.textContent = gravityMode ? 'MAGNET MODE - Click to place magnets' : 'DRAW MODE';
+            }, 1000);
+        });
+        
+        // Magic shake button
+        shakeBtn.addEventListener('click', createScatterEffect);
+
+        // Background vibe button
+        vibeBtn.addEventListener('click', () => {
+            if (isVibeActive) {
+                stopAmbientVibe();
+                statsDiv.textContent = 'VIBE OFF';
+            } else {
+                startAmbientVibe();
+                statsDiv.textContent = '🎵 VIBE ON 🎵';
+            }
+            setTimeout(() => {
+                statsDiv.textContent = gravityMode ? 'MAGNET MODE - Click to place magnets' : 'DRAW MODE';
+            }, 1500);
+        });
+
+        // Initial clear
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    </script>
+</body>
+</html>
