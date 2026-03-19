@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Puzzle</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 id="title">Pixel Puzzle</h1>
+            <div id="currentRecordDisplay" class="current-record" style="display: none;">
+                <div class="record-info">
+                    <div class="record-item">
+                        <div class="record-label">Current</div>
+                        <div id="recordTimer" class="record-timer">0:00.00</div>
+                    </div>
+                    <div class="record-item">
+                        <div class="record-label">Best</div>
+                        <div id="bestRecordTime" class="record-timer">-</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel with Controls -->
+            <div class="left-panel">
+                <div class="controls">
+                    <button id="uploadBtn" class="btn btn-primary">Upload Photo</button>
+                    <button id="cameraBtn" class="btn btn-primary">📷 Camera</button>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                    
+                    <div class="difficulty-selector">
+                        <label>Difficulty:</label>
+                        <button class="difficulty-btn active" data-grid="3">3x3</button>
+                        <button class="difficulty-btn" data-grid="4">4x4</button>
+                        <button class="difficulty-btn" data-grid="5">5x5</button>
+                        <button class="difficulty-btn" data-grid="10">10x10</button>
+                    </div>
+
+                    <div class="shape-selector">
+                        <label>Shape:</label>
+                        <button class="shape-btn active" data-shape="square">⬜ Square</button>
+                        <button class="shape-btn" data-shape="triangle">🔺 Triangle</button>
+                        <button class="shape-btn" data-shape="polygon">⬟ Polygon</button>
+                    </div>
+
+                    <button id="cutBtn" class="btn btn-secondary" disabled>Cut into Puzzles</button>
+                    <button id="viewBtn" class="btn btn-primary" disabled>👁 View</button>
+                    <button id="leaderboardBtn" class="btn btn-primary">🏆 RECORDS</button>
+
+                    <div class="music-selector">
+                        <label>🎵 Music:</label>
+                        <button class="music-btn active" data-music="none">None</button>
+                        <button class="music-btn" data-music="ambient">Ambient</button>
+                        <button class="music-btn" data-music="upbeat">Upbeat</button>
+                        <button class="music-btn" data-music="classical">Classical</button>
+                        <button class="music-btn" data-music="lofi">Lofi</button>
+                        <button class="music-btn" data-music="electronic">Electronic</button>
+                        <div class="music-controls">
+                            <button id="musicPlayBtn" class="music-play-btn">▶ Play</button>
+                            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="30">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center - Assembly Field and Storage -->
+            <div class="center-area">
+                <!-- Right: Original Image -->
+                <div class="image-container">
+                    <h3>Original Image</h3>
+                    <canvas id="originalCanvas" width="600" height="600" class="original-image"></canvas>
+                </div>
+
+                <!-- Left: Assembly Field -->
+                <div class="assembly-container">
+                    <h3>Assembly Field</h3>
+                    <div id="assemblyField" class="assembly-field">
+                        <!-- 4x4 grid of empty slots -->
+                    </div>
+                    <div id="ghostImageContainer" class="ghost-image-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom: Storage Area -->
+        <div class="storage-area">
+            <div class="storage-header">
+                <h3>Storage</h3>
+                <div id="successMessage" class="success-message">Success!</div>
+            </div>
+            <div id="storage" class="storage-grid">
+                <!-- Puzzle pieces will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="cameraModal" class="camera-modal" style="display: none;">
+        <div class="camera-container">
+            <h2>Capture Photo</h2>
+            <video id="cameraVideo" class="camera-video" autoplay playsinline></video>
+            <div class="camera-controls">
+                <button id="captureBtn" class="btn btn-primary">📸 Capture</button>
+                <button id="closeCameraBtn" class="btn btn-secondary">Cancel</button>
+            </div>
+            <canvas id="cameraCanvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <div id="leaderboardModal" class="leaderboard-modal" style="display: none;">
+        <div class="leaderboard-container">
+            <div class="leaderboard-header">
+                <h2>🏆 Leaderboard</h2>
+                <button id="closeLeaderboardBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="leaderboard-content">
+                <table id="leaderboardTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Time</th>
+                            <th>Difficulty</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Records will be added here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="leaderboard-actions">
+                <button id="clearLeaderboardBtn" class="btn btn-secondary">Clear Records</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio for snap effect and background music -->
+    <audio id="snapSound" preload="auto"></audio>
+    <audio id="backgroundMusic" preload="auto" loop></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

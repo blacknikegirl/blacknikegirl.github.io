@@ -150,12 +150,15 @@
 
         .protrusion {
             position: absolute;
-            background: linear-gradient(180deg, #228B22 0%, #228B22 40%, #8B4513 40%, #654321 100%);
-            border: 2px solid #4a2511;
+            background: linear-gradient(180deg, #228B22 0%, #228B22 35%, #8B4513 35%, #654321 100%);
+            border: 3px solid #3a1a00;
+            border-top: 2px solid #4a3a20;
             box-shadow: 
-                inset 0 2px 0 rgba(255,255,255,0.3), 
-                inset 0 -2px 0 rgba(0,0,0,0.3),
-                2px 2px 4px rgba(0,0,0,0.2);
+                inset 0 3px 0 rgba(255,255,255,0.4), 
+                inset 0 -3px 0 rgba(0,0,0,0.4),
+                inset 3px 0 0 rgba(255,255,255,0.2),
+                inset -3px 0 0 rgba(0,0,0,0.2),
+                4px 4px 8px rgba(0,0,0,0.3);
         }
 
         .protrusion::before {
@@ -164,9 +167,21 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 40%;
-            background: repeating-linear-gradient(90deg, #22aa22 0px, #22aa22 2px, #228B22 2px, #228B22 4px);
-            border-bottom: 1px solid #1a6b1a;
+            height: 38%;
+            background: repeating-linear-gradient(90deg, #22aa22 0px, #22aa22 3px, #228B22 3px, #228B22 6px);
+            border-bottom: 2px solid #1a5a1a;
+        }
+
+        .protrusion::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 2px;
+            pointer-events: none;
         }
 
         .enemy {
@@ -369,9 +384,11 @@
         const keys = {};
         
         function setupInputHandling() {
+            // Listen on document for all key events
             document.addEventListener('keydown', (e) => {
                 const key = e.key.toLowerCase();
                 keys[key] = true;
+                console.log('Key pressed:', key);
                 // Prevent default for space to avoid scrolling
                 if (key === ' ') {
                     e.preventDefault();
@@ -381,19 +398,7 @@
             document.addEventListener('keyup', (e) => {
                 const key = e.key.toLowerCase();
                 keys[key] = false;
-            });
-            
-            window.addEventListener('keydown', (e) => {
-                const key = e.key.toLowerCase();
-                keys[key] = true;
-                if (key === ' ') {
-                    e.preventDefault();
-                }
-            });
-            
-            window.addEventListener('keyup', (e) => {
-                const key = e.key.toLowerCase();
-                keys[key] = false;
+                console.log('Key released:', key);
             });
         }
         
@@ -404,13 +409,16 @@
         gameContainer.addEventListener('click', () => {
             gameContainer.focus();
         });
-        gameContainer.focus();
-
-        // Focus on document to ensure keyboard input is captured
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.focus();
+        
+        // Click anywhere to focus the game
+        document.addEventListener('click', () => {
+            gameContainer.focus();
         });
-        document.body.focus();
+        
+        // Auto-focus game after a short delay
+        setTimeout(() => {
+            gameContainer.focus();
+        }, 500);
 
         // Platform class
         class Platform {
@@ -445,6 +453,10 @@
                 this.height = 64 * GAME_SCALE;
                 this.speed = 2 * GAME_SCALE;
                 this.direction = 1;
+                this.velocityY = 0;
+                this.velocityX = 0;
+                this.gravity = 0.6;
+                this.maxGravity = 15;
                 this.element = document.createElement('img');
                 this.element.className = 'enemy';
                 this.element.src = 'mushroom.png';
@@ -466,12 +478,51 @@
             }
 
             update() {
-                this.x += this.speed * this.direction;
+                // Horizontal movement
+                this.velocityX = this.speed * this.direction;
+                this.x += this.velocityX;
                 
-                // Change direction at boundaries (use world width)
+                // Apply gravity
+                this.velocityY += this.gravity;
+                if (this.velocityY > this.maxGravity) {
+                    this.velocityY = this.maxGravity;
+                }
+                this.y += this.velocityY;
+
+                // Boundary checking (sides) - change direction at world edges
                 if (this.x < 0 || this.x > 4000 - this.width) {
                     this.direction *= -1;
                 }
+
+                // Ground collision
+                const groundLevel = 520 * GAME_SCALE;
+                if (this.y + this.height > groundLevel) {
+                    this.y = groundLevel - this.height;
+                    this.velocityY = 0;
+                }
+
+                // Platform collision (including protrusions) - precise hitbox matching
+                platforms.forEach(platform => {
+                    // Check if enemy is above platform and falling
+                    if (this.velocityY >= 0 &&
+                        this.y + this.height <= platform.y + 5 &&
+                        this.y + this.height + this.velocityY + 2 >= platform.y &&
+                        this.x + this.width > platform.x &&
+                        this.x < platform.x + platform.width) {
+                        this.y = platform.y - this.height;
+                        this.velocityY = 0;
+                    }
+                    // Check if hitting protrusions horizontally and bounce back
+                    if (platform.y === 490 * GAME_SCALE) {
+                        if (this.x + this.width > platform.x && 
+                            this.x < platform.x + platform.width &&
+                            this.y + this.height > platform.y &&
+                            this.y <= platform.y) {
+                            // Bounce off
+                            this.direction *= -1;
+                        }
+                    }
+                });
 
                 this.element.style.left = this.x + 'px';
                 this.element.style.top = this.y + 'px';
@@ -512,6 +563,7 @@
 
         // Create level
         const platforms = [];
+        const protrusions = [];
         const enemies = [];
         const coins = [];
 
@@ -519,66 +571,52 @@
             // Ground platform (expanded)
             platforms.push(new Platform(0, 520, 4000, 80));
 
-            // First section
-            platforms.push(new Platform(100, 420, 150, 20));
-            platforms.push(new Platform(350, 380, 150, 20));
-            platforms.push(new Platform(600, 340, 150, 20));
+            // First section - platforms sized for character hitboxes
+            platforms.push(new Platform(250, 320, 80, 20));
+            platforms.push(new Platform(550, 280, 80, 20));
 
             // Second section
-            platforms.push(new Platform(900, 380, 150, 20));
-            platforms.push(new Platform(1150, 340, 150, 20));
-            platforms.push(new Platform(1400, 380, 150, 20));
+            platforms.push(new Platform(950, 320, 80, 20));
+            platforms.push(new Platform(1300, 280, 80, 20));
 
-            // Third section - staircase
-            platforms.push(new Platform(1650, 450, 100, 20));
-            platforms.push(new Platform(1800, 400, 100, 20));
-            platforms.push(new Platform(1950, 350, 100, 20));
-            platforms.push(new Platform(2100, 300, 100, 20));
-            platforms.push(new Platform(2250, 250, 100, 20));
+            // Third section - staircase reduced
+            platforms.push(new Platform(1700, 300, 80, 20));
+            platforms.push(new Platform(2000, 250, 80, 20));
 
-            // Fourth section
-            platforms.push(new Platform(2400, 380, 150, 20));
-            platforms.push(new Platform(2650, 340, 150, 20));
-            platforms.push(new Platform(2900, 300, 200, 20));
+            // Fourth section - reduced
+            platforms.push(new Platform(2400, 300, 80, 20));
+            platforms.push(new Platform(2750, 250, 80, 20));
 
             // Fifth section - final approach
-            platforms.push(new Platform(3150, 380, 150, 20));
-            platforms.push(new Platform(3400, 320, 150, 20));
-            platforms.push(new Platform(3650, 260, 150, 20));
+            platforms.push(new Platform(3100, 280, 80, 20));
+            platforms.push(new Platform(3450, 240, 80, 20));
 
-            // Enemies
-            enemies.push(new Enemy(300, 390));
-            enemies.push(new Enemy(650, 310));
-            enemies.push(new Enemy(950, 350));
-            enemies.push(new Enemy(1350, 350));
-            enemies.push(new Enemy(1800, 380));
-            enemies.push(new Enemy(2100, 280));
-            enemies.push(new Enemy(2500, 350));
-            enemies.push(new Enemy(2850, 280));
-            enemies.push(new Enemy(3200, 350));
-            enemies.push(new Enemy(3600, 240));
+            // Ground protrusions (tangible blocks - added to platforms for collision)
+            platforms.push(new Platform(600, 490, 60, 30));
+            platforms.push(new Platform(1350, 490, 60, 30));
+            platforms.push(new Platform(2100, 490, 60, 30));
+            platforms.push(new Platform(2850, 490, 60, 30));
 
-            // Coins (expanded)
+            // Enemies positioned on ground between protrusions
+            enemies.push(new Enemy(975, 440));
+            enemies.push(new Enemy(1750, 440));
+            enemies.push(new Enemy(2500, 440));
+            enemies.push(new Enemy(3200, 440));
+
+            // Coins
+            coins.push(new Coin(600, 450));
+            coins.push(new Coin(1350, 450));
+            coins.push(new Coin(2100, 450));
+            coins.push(new Coin(2850, 450));
             coins.push(new Coin(150, 380));
-            coins.push(new Coin(425, 340));
-            coins.push(new Coin(675, 300));
-            coins.push(new Coin(1000, 340));
-            coins.push(new Coin(1250, 300));
-            coins.push(new Coin(1500, 340));
-            coins.push(new Coin(1750, 410));
-            coins.push(new Coin(1900, 370));
-            coins.push(new Coin(2050, 320));
-            coins.push(new Coin(2200, 270));
-            coins.push(new Coin(2500, 340));
-            coins.push(new Coin(2750, 280));
-            coins.push(new Coin(3000, 260));
-            coins.push(new Coin(3250, 340));
-            coins.push(new Coin(3500, 280));
-            coins.push(new Coin(3750, 220));
+            coins.push(new Coin(750, 360));
+            coins.push(new Coin(1500, 380));
+            coins.push(new Coin(2250, 360));
+            coins.push(new Coin(3000, 380));
 
             // Create ground protrusions
             const GAME_SCALE_VAL = GAME_SCALE;
-            function createProtrusion(x, y, width, height) {
+            function drawProtrusion(x, y, width, height) {
                 const protrusion = document.createElement('div');
                 protrusion.className = 'protrusion';
                 protrusion.style.left = (x * GAME_SCALE_VAL) + 'px';
@@ -588,21 +626,11 @@
                 gameWorld.appendChild(protrusion);
             }
 
-            // Add protrusions scattered on ground (y=520-30 to sit on top of ground)
-            createProtrusion(200, 490, 40, 30);
-            createProtrusion(400, 490, 40, 30);
-            createProtrusion(750, 490, 40, 30);
-            createProtrusion(1000, 490, 40, 30);
-            createProtrusion(1200, 490, 40, 30);
-            createProtrusion(1500, 490, 30, 30);
-            createProtrusion(1700, 490, 30, 30);
-            createProtrusion(2050, 490, 40, 30);
-            createProtrusion(2350, 490, 40, 30);
-            createProtrusion(2650, 490, 30, 30);
-            createProtrusion(2900, 490, 40, 30);
-            createProtrusion(3200, 490, 40, 30);
-            createProtrusion(3500, 490, 30, 30);
-            createProtrusion(3750, 490, 40, 30);
+            // Draw visual protrusions on ground (only at ground level)
+            drawProtrusion(600, 490, 60, 30);
+            drawProtrusion(1350, 490, 60, 30);
+            drawProtrusion(2100, 490, 60, 30);
+            drawProtrusion(2850, 490, 60, 30);
         }
 
         // Create Mario visual
@@ -667,9 +695,9 @@
             }
 
             // Boundary checking (prevent falling underground)
-            const groundLevel = gameContainer.offsetHeight - 100; // Bottom boundary
-            if (mario.y + mario.height > groundLevel) {
-                mario.y = groundLevel - mario.height;
+            const groundLevel = 520 * GAME_SCALE; // Match ground platform Y position
+            if (mario.y + mario.height > groundLevel + 80 * GAME_SCALE) {
+                mario.y = groundLevel + 80 * GAME_SCALE - mario.height;
                 mario.velocityY = 0;
             }
 
@@ -677,12 +705,12 @@
             let onGround = false;
             if (!keys['s']) {  // Only check collision if NOT pressing S
                 platforms.forEach(platform => {
-                    // Check if Mario is above platform and falling or touching
+                    // Check if Mario is above platform and falling or touching - precise hitbox matching
                     if (mario.velocityY >= 0 &&
-                        mario.y + mario.height <= platform.y + 20 &&
-                        mario.y + mario.height + mario.velocityY + 5 >= platform.y &&
-                        mario.x + mario.width > platform.x + 5 &&
-                        mario.x < platform.x + platform.width - 5) {
+                        mario.y + mario.height <= platform.y + 5 &&
+                        mario.y + mario.height + mario.velocityY + 2 >= platform.y &&
+                        mario.x + mario.width > platform.x &&
+                        mario.x < platform.x + platform.width) {
                         mario.y = platform.y - mario.height;
                         mario.velocityY = 0;
                         mario.jumping = false;
@@ -696,13 +724,33 @@
                 loseLife();
             }
 
-            // Enemy collision
-            enemies.forEach(enemy => {
+            // Enemy update and collision
+            const enemiesToRemove = [];
+            enemies.forEach((enemy, index) => {
                 enemy.update();
-                if (enemy.collidesWith(mario)) {
+                
+                // Check if Mario is jumping on enemy from above - precise hitbox matching
+                if (mario.velocityY > 0 &&
+                    mario.y + mario.height <= enemy.y + 10 &&
+                    mario.x + mario.width > enemy.x &&
+                    mario.x < enemy.x + enemy.width) {
+                    // Enemy defeated!
+                    enemy.element.remove();
+                    enemiesToRemove.push(index);
+                    mario.velocityY = -mario.jumpPower * 0.7; // Bounce effect
+                    mario.jumping = true;
+                    score += 200;
+                    scoreDisplay.textContent = score;
+                } else if (enemy.collidesWith(mario)) {
+                    // Hit from side or top - lose life
                     loseLife();
                 }
             });
+            
+            // Remove defeated enemies
+            for (let i = enemiesToRemove.length - 1; i >= 0; i--) {
+                enemies.splice(enemiesToRemove[i], 1);
+            }
 
             // Coin collection
             coins.forEach(coin => {
