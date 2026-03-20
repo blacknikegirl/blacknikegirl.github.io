@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Emotion Camera</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=Syne:wght@400;700;800&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+	<style>
+		:root {
+			--gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			--gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+			--gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+			--text-main: #ffffff;
+			--text-soft: #e0e0e0;
+			--shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.4);
+			--shadow-md: 0 10px 30px rgba(0, 0, 0, 0.2);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+			color: var(--text-main);
+			font-family: "Plus Jakarta Sans", sans-serif;
+			background: linear-gradient(to bottom, #0a0e27, #1a1f3a);
+			overflow: hidden;
+			position: relative;
+			font-weight: 400;
+			letter-spacing: 0.3px;
+			transition: background 0.8s ease, background-color 0.8s ease;
+		}
+
+		/* Happy - Animated yellow/orange gradient */
+		body.mood-happy {
+			background: linear-gradient(-45deg, #ffe500, #ff7a00, #ffaa00, #ffe500);
+			background-size: 400% 400%;
+			animation: happyGradient 8s ease infinite;
+		}
+
+		@keyframes happyGradient {
+			0% { background-position: 0% 50%; }
+			50% { background-position: 100% 50%; }
+			100% { background-position: 0% 50%; }
+		}
+
+		/* Sad - Blue circular gradient */
+		body.mood-sad {
+			background: radial-gradient(circle at 50% 50%, #5fccff, #0066cc, #001a66);
+			position: relative;
+		}
+
+		body.mood-sad::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: radial-gradient(circle at 60% 40%, rgba(74, 173, 255, 0.3), transparent 70%);
+			pointer-events: none;
+			z-index: 1;
+			animation: sadPulse 4s ease-in-out infinite;
+		}
+
+		@keyframes sadPulse {
+			0%, 100% { opacity: 0.3; }
+			50% { opacity: 0.8; }
+		}
+
+		/* Neutral - Gray with poker face */
+		body.mood-neutral {
+			background: linear-gradient(to bottom, #7a7a9e, #3a3a5a, #0a0a2a);
+			position: relative;
+		}
+
+		body.mood-neutral::after {
+			content: '🫡';
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			font-size: 150px;
+			opacity: 0.15;
+			pointer-events: none;
+			z-index: 1;
+			animation: pokerFaceFloat 6s ease-in-out infinite;
+		}
+
+		@keyframes pokerFaceFloat {
+			0%, 100% { transform: translate(-50%, -50%); }
+			50% { transform: translate(-50%, -60%); }
+		}
+
+		/* Angry - Fire effect with red background */
+		body.mood-angry {
+			background: linear-gradient(to bottom, #ff3333, #aa0000, #330000);
+			position: relative;
+		}
+
+		body.mood-angry::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: 
+				radial-gradient(circle at 20% 80%, rgba(255, 150, 0, 0.6), transparent 50%),
+				radial-gradient(circle at 80% 20%, rgba(255, 50, 0, 0.5), transparent 50%),
+				radial-gradient(circle at 50% 50%, rgba(255, 200, 0, 0.4), transparent 70%);
+			pointer-events: none;
+			z-index: 1;
+			animation: fireBurst 3s ease-in-out infinite;
+		}
+
+		@keyframes fireBurst {
+			0% {
+				background: 
+					radial-gradient(circle at 20% 80%, rgba(255, 150, 0, 0.6), transparent 50%),
+					radial-gradient(circle at 80% 20%, rgba(255, 50, 0, 0.5), transparent 50%),
+					radial-gradient(circle at 50% 50%, rgba(255, 200, 0, 0.4), transparent 70%);
+			}
+			50% {
+				background: 
+					radial-gradient(circle at 30% 70%, rgba(255, 200, 0, 0.7), transparent 60%),
+					radial-gradient(circle at 70% 30%, rgba(255, 120, 0, 0.6), transparent 60%),
+					radial-gradient(circle at 50% 50%, rgba(255, 255, 100, 0.5), transparent 80%);
+			}
+			100% {
+				background: 
+					radial-gradient(circle at 20% 80%, rgba(255, 150, 0, 0.6), transparent 50%),
+					radial-gradient(circle at 80% 20%, rgba(255, 50, 0, 0.5), transparent 50%),
+					radial-gradient(circle at 50% 50%, rgba(255, 200, 0, 0.4), transparent 70%);
+			}
+		}
+
+		.app {
+			position: relative;
+			z-index: 2;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 20px;
+		}
+
+		.panel {
+			width: 100%;
+			max-width: 1200px;
+			border-radius: 32px;
+			padding: 40px;
+			background: rgba(20, 25, 50, 0.7);
+			border: 2px solid rgba(102, 126, 234, 0.3);
+			backdrop-filter: blur(25px);
+			box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+			display: grid;
+			gap: 40px;
+			grid-template-columns: 1fr 1.2fr;
+			animation: panelSlide 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+		}
+
+		@keyframes panelSlide {
+			from {
+				opacity: 0;
+				transform: translateY(40px) scale(0.95);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0) scale(1);
+			}
+		}
+
+		.video-wrap {
+			position: relative;
+			border-radius: 24px;
+			overflow: hidden;
+			min-height: 380px;
+			background: linear-gradient(135deg, rgba(20, 30, 60, 0.9) 0%, rgba(30, 40, 80, 0.8) 100%);
+			border: 2px solid rgba(240, 147, 251, 0.2);
+			box-shadow: 0 0 40px rgba(102, 126, 234, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.3);
+		}
+
+		.face-sticker {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 76px;
+			height: 76px;
+			object-fit: contain;
+			pointer-events: none;
+			z-index: 4;
+			opacity: 0;
+			transition: opacity 0.15s ease;
+			filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+		}
+
+		.face-sticker.visible {
+			opacity: 1;
+		}
+
+		video {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+			transform: scaleX(1);
+			filter: brightness(1) contrast(1.02);
+			transition: filter 0.25s ease;
+		}
+
+		video.inverted {
+			transform: scaleX(-1);
+		}
+
+		video.light-boost {
+			filter: brightness(1.34) contrast(1.1);
+		}
+
+		.screen-flash {
+			position: fixed;
+			left: 0;
+			top: 0;
+			width: 0;
+			height: 0;
+			background: transparent;
+			border-radius: 24px;
+			box-shadow: 0 0 0 200vmax rgba(255, 248, 214, 0.58);
+			opacity: 0;
+			pointer-events: none;
+			z-index: 3;
+			transition: opacity 0.22s ease;
+		}
+
+		body.screen-flash-on .screen-flash {
+			opacity: 0.82;
+		}
+
+		.mood-canvas {
+			position: fixed;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 1;
+			display: none;
+		}
+
+		.fx-canvas {
+			position: fixed;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 6;
+			display: none;
+		}
+
+		.hud {
+			position: absolute;
+			left: 16px;
+			right: 16px;
+			top: 16px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 20px;
+			font-size: 0.9rem;
+			color: #000000;
+			background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(240, 147, 251, 0.15));
+			padding: 14px 20px;
+			border-radius: 14px;
+			backdrop-filter: blur(15px);
+			border: 1px solid rgba(102, 126, 234, 0.4);
+			font-family: "Plus Jakarta Sans", sans-serif;
+			font-weight: 600;
+			letter-spacing: 0.5px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+		}
+
+		.hud span {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 0;
+			background: transparent;
+			border-radius: 0;
+			border: none;
+			transition: all 0.3s ease;
+			position: relative;
+			color: #000000;
+		}
+
+		.hud span::before {
+			content: '';
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: currentColor;
+			opacity: 0.7;
+		}
+
+		.hud span:first-child {
+			background: transparent;
+			border-color: transparent;
+			color: #000000;
+		}
+
+		.hud span:first-child::before {
+			box-shadow: 0 0 8px #667eea;
+		}
+
+		.hud span:last-child {
+			background: transparent;
+			border-color: transparent;
+			color: #000000;
+		}
+
+		.hud span:last-child::before {
+			box-shadow: 0 0 8px #00f2fe;
+		}
+
+		.hud span:hover {
+			background: transparent;
+			transform: none;
+		}
+
+		h1 {
+			margin: 0 0 12px 0;
+			font-family: "Syne", sans-serif;
+			font-weight: 800;
+			letter-spacing: -0.03em;
+			font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+			text-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+			line-height: 1.1;
+			animation: titleGlow 3s ease-in-out infinite;
+		}
+
+		@keyframes titleGlow {
+			0%, 100% { filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.3)); }
+			50% { filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.6)); }
+		}
+
+		p {
+			margin: 0 0 20px 0;
+			color: var(--text-soft);
+			line-height: 1.7;
+			font-size: 0.98rem;
+			font-family: "Plus Jakarta Sans", sans-serif;
+			font-weight: 400;
+			letter-spacing: 0.4px;
+		}
+
+		.emotion {
+			margin: 24px 0 12px 0;
+			font-family: "Syne", sans-serif;
+			font-weight: 800;
+			font-size: clamp(2.2rem, 6vw, 3.2rem);
+			letter-spacing: -0.02em;
+			text-transform: uppercase;
+			background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+			line-height: 1;
+			position: relative;
+			animation: emotionPulse 2s ease-in-out infinite;
+		}
+
+		@keyframes emotionPulse {
+			0%, 100% { filter: drop-shadow(0 0 15px rgba(240, 147, 251, 0.4)); }
+			50% { filter: drop-shadow(0 0 25px rgba(240, 147, 251, 0.7)); }
+		}
+
+		.confidence {
+			font-size: 1rem;
+			color: #a0aec0;
+			margin-bottom: 20px;
+			font-family: "Manrope", sans-serif;
+			font-weight: 600;
+			letter-spacing: 0.5px;
+		}
+
+		.legend {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 12px;
+			margin: 24px 0;
+			padding: 16px;
+			background: rgba(102, 126, 234, 0.1);
+			border-radius: 16px;
+			border: 1px solid rgba(102, 126, 234, 0.2);
+		}
+
+		.legend span {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 0.9rem;
+			color: var(--text-soft);
+			font-family: "Plus Jakarta Sans", sans-serif;
+			font-weight: 500;
+			letter-spacing: 0.3px;
+		}
+
+		.dot {
+			width: 12px;
+			height: 12px;
+			border-radius: 50%;
+			flex-shrink: 0;
+		}
+
+		.controls {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 12px;
+			margin: 24px 0;
+		}
+
+		button {
+			border: 0;
+			border-radius: 12px;
+			padding: 12px 16px;
+			font-family: "Plus Jakarta Sans", sans-serif;
+			font-weight: 700;
+			font-size: 0.9rem;
+			color: #0d1422;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			cursor: pointer;
+			transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+			position: relative;
+			overflow: hidden;
+			letter-spacing: 0.5px;
+			text-transform: uppercase;
+		}
+
+		button::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+			transition: left 0.3s ease;
+			z-index: -1;
+		}
+
+		button:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+		}
+
+		button:hover::before {
+			left: 0;
+		}
+
+		.status {
+			margin-top: 20px;
+			padding: 14px 16px;
+			font-size: 0.9rem;
+			color: #a0aec0;
+			min-height: 24px;
+			background: rgba(102, 126, 234, 0.08);
+			border-radius: 12px;
+			border-left: 4px solid #667eea;
+			font-family: "Manrope", sans-serif;
+			font-weight: 500;
+			letter-spacing: 0.3px;
+		}
+
+		@media (max-width: 1024px) {
+			.panel {
+				grid-template-columns: 1fr;
+				gap: 30px;
+				padding: 30px;
+			}
+
+			.video-wrap {
+				min-height: 320px;
+			}
+
+			.controls {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		@media (max-width: 640px) {
+			.app {
+				padding: 12px;
+			}
+
+			.panel {
+				padding: 20px;
+				gap: 20px;
+				border-radius: 24px;
+			}
+
+			.video-wrap {
+				min-height: 280px;
+				border-radius: 16px;
+			}
+
+			h1 {
+				font-size: 1.8rem;
+			}
+
+			.emotion {
+				font-size: 2rem;
+			}
+
+			.legend {
+				grid-template-columns: 1fr;
+			}
+
+			button {
+				padding: 10px 14px;
+				font-size: 0.85rem;
+			}
+		}
+	</style>
+</head>
+<body class="mood-neutral">
+	<div id="screenFlash" class="screen-flash" aria-hidden="true"></div>
+	<canvas id="moodCanvas" class="mood-canvas" aria-hidden="true"></canvas>
+	<canvas id="fxCanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+	<main class="app">
+		<section class="panel">
+			<div>
+				<h1>Emotion Camera</h1>
+
+				<div class="controls">
+					<button id="startBtn" type="button">Start Camera</button>
+					<button id="stopBtn" type="button">Stop Camera</button>
+					<button id="invertBtn" type="button">Inverted: On</button>
+					<button id="flashBtn" type="button">Screen Flash: Off</button>
+					<button id="beautyBtn" type="button">Beauty Scanner</button>
+				</div>
+
+				<div id="emotionLabel" class="emotion">NEUTRAL</div>
+				<div id="confidenceLabel" class="confidence">Confidence: 0%</div>
+
+				<div class="legend">
+					<span><i class="dot" style="background:#ffca3a"></i>Happy</span>
+					<span><i class="dot" style="background:#355070"></i>Sad</span>
+					<span><i class="dot" style="background:#607d8b"></i>Neutral</span>
+					<span><i class="dot" style="background:#c1121f"></i>Angry</span>
+				</div>
+
+				<p>
+					Capture your emotions through your webcam. The app analyzes your facial expressions in real-time and dynamically transforms the full-screen background to reflect your current emotional state.
+				</p>
+
+				<div id="beautyLabel" class="confidence">Beauty Score: --%</div>
+
+				<div id="status" class="status">Click "Start Camera" to begin.</div>
+			</div>
+
+			<div class="video-wrap">
+				<video id="camera" autoplay muted playsinline></video>
+				<img id="emotionSticker" class="face-sticker" alt="Emotion sticker" />
+				<div class="hud">
+					<span id="faceCount">Faces: 0</span>
+					<span>Live detection</span>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- face-api.js includes pre-trained face detection and expression models. -->
+	<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+	<script>
+		// Model files are hosted publicly so this file can run without a build step.
+		const MODEL_URL = "https://justadudewhohacks.github.io/face-api.js/models";
+
+		const camera = document.getElementById("camera");
+		const videoWrap = document.querySelector(".video-wrap");
+		const emotionSticker = document.getElementById("emotionSticker");
+		const screenFlash = document.getElementById("screenFlash");
+		const moodCanvas = document.getElementById("moodCanvas");
+		const moodCtx = moodCanvas.getContext("2d");
+		const fxCanvas = document.getElementById("fxCanvas");
+		const fxCtx = fxCanvas.getContext("2d");
+		const statusLabel = document.getElementById("status");
+		const emotionLabel = document.getElementById("emotionLabel");
+		const confidenceLabel = document.getElementById("confidenceLabel");
+		const faceCountLabel = document.getElementById("faceCount");
+		const startBtn = document.getElementById("startBtn");
+		const stopBtn = document.getElementById("stopBtn");
+		const invertBtn = document.getElementById("invertBtn");
+		const flashBtn = document.getElementById("flashBtn");
+		const beautyBtn = document.getElementById("beautyBtn");
+		const beautyLabel = document.getElementById("beautyLabel");
+
+		let detectionTimer = null;
+		let currentMood = "neutral";
+		let isCameraInverted = true;
+		let isScreenFlashOn = false;
+		let usingLightBoost = false;
+		let modelsReady = false;
+		let noFaceStreak = 0;
+		let lastHappyCelebrationAt = 0;
+		let fxRunning = false;
+		let fxFrameId = null;
+		let moodFrameId = null;
+		let moodEffectsActive = false;
+		let moodLastRender = 0;
+		let moodParticles = [];
+		let detectionInFlight = false;
+		let detectionActive = false;
+		let latestFaceDetection = null;
+		let detectionTick = 0;
+		let viewportWidth = window.innerWidth;
+		let viewportHeight = window.innerHeight;
+		let pineappleSprite = null;
+		const moodEffectsEnabled = false;
+		const celebrationEnabled = false;
+		let stickerAnimId = null;
+		let stickerOpacity = 0;
+		const stickerTarget = {
+			x: 0,
+			y: 0,
+			size: 110,
+			visible: false
+		};
+		const stickerRender = {
+			x: 0,
+			y: 0,
+			size: 76
+		};
+
+		// Keep a short history so emotion changes are stable instead of flickering each frame.
+		const emotionHistory = [];
+		const historySize = 6;
+		const confettiColors = ["#ffd166", "#06d6a0", "#118ab2", "#ef476f", "#ff7b00", "#f4f1de"];
+		const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const cpuCores = navigator.hardwareConcurrency || 4;
+		const memoryGb = navigator.deviceMemory || 4;
+		const detectorIntervalMs = 380;
+		const moodFps = 30;
+		const effectQuality = prefersReducedMotion
+			? 0.2
+			: cpuCores <= 4 || memoryGb <= 4
+				? 0.38
+				: 0.58;
+		const moodDensity = effectQuality > 0.5 ? 1 : 0.75;
+		const tinyDetectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
+		const ssdDetectorOptions = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.35 });
+		const moodStickerSources = {
+			happy: "./dobri.png",
+			sad: "./grust.png",
+			neutral: "./neutral.png",
+			angry: "./zloi.png"
+		};
+
+		// Only these four emotions are requested, so we map model outputs to this subset.
+		const trackedEmotions = ["happy", "sad", "neutral", "angry"];
+
+		async function loadModels() {
+			statusLabel.textContent = "Loading face detection models...";
+			startBtn.disabled = true;
+
+			// Load two detectors and expression net. Landmark net is not required in this app.
+			await Promise.all([
+				faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+				faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+				faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)
+			]);
+
+			modelsReady = true;
+			startBtn.disabled = false;
+			statusLabel.textContent = "Models loaded. Ready to start camera.";
+		}
+
+		async function startCamera() {
+			try {
+				if (camera.srcObject) {
+					statusLabel.textContent = "Camera is already running.";
+					return;
+				}
+
+				if (!modelsReady) {
+					statusLabel.textContent = "Models are still loading. Please wait a moment...";
+					return;
+				}
+
+				if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+					throw new Error("Camera API is not available in this browser.");
+				}
+
+				// Request front-facing camera when possible for better face framing.
+				const stream = await navigator.mediaDevices.getUserMedia({
+					video: {
+						facingMode: "user",
+						width: { ideal: 1280 },
+						height: { ideal: 720 }
+					},
+					audio: false
+				});
+
+				camera.srcObject = stream;
+
+				// Start detection only after video metadata is ready and playback begins.
+				await camera.play();
+				noFaceStreak = 0;
+				detectionTick = 0;
+				emotionHistory.length = 0;
+				startStickerLoop();
+				hideEmotionSticker();
+				if (moodEffectsEnabled && currentMood !== "happy") {
+					startMoodEffects();
+				}
+				startDetectionLoop();
+				statusLabel.textContent = "Camera started. Detecting emotions...";
+			} catch (error) {
+				statusLabel.textContent = `Unable to access camera: ${error.message}`;
+			}
+		}
+
+		function stopCamera() {
+			detectionActive = false;
+			detectionInFlight = false;
+
+			if (camera.srcObject) {
+				const tracks = camera.srcObject.getTracks();
+				tracks.forEach((track) => track.stop());
+				camera.srcObject = null;
+			}
+
+			isScreenFlashOn = false;
+			usingLightBoost = false;
+			camera.classList.remove("light-boost");
+			document.body.classList.remove("screen-flash-on");
+			screenFlash.style.opacity = "";
+			flashBtn.textContent = "Screen Flash: Off";
+
+			if (fxFrameId) {
+				cancelAnimationFrame(fxFrameId);
+				fxFrameId = null;
+			}
+			fxRunning = false;
+			fxCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+			stopMoodEffects();
+
+			if (detectionTimer) {
+				clearTimeout(detectionTimer);
+				detectionTimer = null;
+			}
+
+			faceCountLabel.textContent = "Faces: 0";
+			statusLabel.textContent = "Camera stopped.";
+			emotionHistory.length = 0;
+			latestFaceDetection = null;
+			stopStickerLoop();
+			hideEmotionSticker();
+			beautyLabel.textContent = "Beauty Score: --%";
+			setMood("neutral", 0);
+		}
+
+		function smoothEmotion(emotion, score) {
+			emotionHistory.push({ emotion, score });
+			if (emotionHistory.length > historySize) {
+				emotionHistory.shift();
+			}
+
+			const totals = {
+				happy: 0,
+				sad: 0,
+				neutral: 0,
+				angry: 0
+			};
+
+			for (const item of emotionHistory) {
+				totals[item.emotion] += item.score;
+			}
+
+			let bestEmotion = "neutral";
+			let bestTotal = 0;
+
+			for (const emotion of trackedEmotions) {
+				if (totals[emotion] > bestTotal) {
+					bestTotal = totals[emotion];
+					bestEmotion = emotion;
+				}
+			}
+
+			const sampleCount = Math.max(emotionHistory.length, 1);
+			return { emotion: bestEmotion, score: Math.min(bestTotal / sampleCount, 1) };
+		}
+
+		function resizeFxCanvas() {
+			// Cap pixel ratio for canvas effects to avoid huge GPU cost on high-DPI displays.
+			const ratio = Math.min(window.devicePixelRatio || 1, 1.35);
+			viewportWidth = window.innerWidth;
+			viewportHeight = window.innerHeight;
+			fxCanvas.width = Math.floor(window.innerWidth * ratio);
+			fxCanvas.height = Math.floor(window.innerHeight * ratio);
+			fxCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+		}
+
+		function resizeMoodCanvas() {
+			const ratio = Math.min(window.devicePixelRatio || 1, 1.2);
+			viewportWidth = window.innerWidth;
+			viewportHeight = window.innerHeight;
+			moodCanvas.width = Math.floor(window.innerWidth * ratio);
+			moodCanvas.height = Math.floor(window.innerHeight * ratio);
+			moodCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+		}
+
+		function randomBetween(min, max) {
+			return Math.random() * (max - min) + min;
+		}
+
+		function hideEmotionSticker() {
+			stickerTarget.visible = false;
+		}
+
+		function startStickerLoop() {
+			if (stickerAnimId) {
+				return;
+			}
+
+			const tick = () => {
+				const easing = 0.24;
+				stickerRender.x += (stickerTarget.x - stickerRender.x) * easing;
+				stickerRender.y += (stickerTarget.y - stickerRender.y) * easing;
+				stickerRender.size += (stickerTarget.size - stickerRender.size) * easing;
+
+				if (stickerTarget.visible) {
+					stickerOpacity = Math.min(1, stickerOpacity + 0.2);
+				} else {
+					stickerOpacity = Math.max(0, stickerOpacity - 0.2);
+				}
+
+				emotionSticker.style.width = `${Math.round(stickerRender.size)}px`;
+				emotionSticker.style.height = `${Math.round(stickerRender.size)}px`;
+				emotionSticker.style.transform = `translate(${Math.round(stickerRender.x)}px, ${Math.round(stickerRender.y)}px)`;
+				emotionSticker.style.opacity = stickerOpacity.toFixed(2);
+
+				if (stickerOpacity > 0.02) {
+					emotionSticker.classList.add("visible");
+				} else {
+					emotionSticker.classList.remove("visible");
+				}
+
+				stickerAnimId = requestAnimationFrame(tick);
+			};
+
+			stickerAnimId = requestAnimationFrame(tick);
+		}
+
+		function stopStickerLoop() {
+			if (stickerAnimId) {
+				cancelAnimationFrame(stickerAnimId);
+				stickerAnimId = null;
+			}
+			stickerOpacity = 0;
+			emotionSticker.style.opacity = "0";
+		}
+
+		function updateEmotionSticker(emotion, detection) {
+			const source = moodStickerSources[emotion] || moodStickerSources.neutral;
+			if (emotionSticker.getAttribute("src") !== source) {
+				emotionSticker.setAttribute("src", source);
+			}
+
+			const box = detection?.detection?.box;
+			if (!box || !camera.videoWidth || !camera.videoHeight) {
+				hideEmotionSticker();
+				return;
+			}
+
+			const displayW = camera.clientWidth;
+			const displayH = camera.clientHeight;
+			if (!displayW || !displayH) {
+				hideEmotionSticker();
+				return;
+			}
+
+			const scale = Math.max(displayW / camera.videoWidth, displayH / camera.videoHeight);
+			const renderW = camera.videoWidth * scale;
+			const renderH = camera.videoHeight * scale;
+			const offsetX = (displayW - renderW) * 0.5;
+			const offsetY = (displayH - renderH) * 0.5;
+
+			const faceW = box.width * scale;
+			const faceH = box.height * scale;
+			let faceX = box.x * scale + offsetX;
+			const faceY = box.y * scale + offsetY;
+
+			if (isCameraInverted) {
+				faceX = displayW - (faceX + faceW);
+			}
+
+			const stickerSize = Math.max(75, Math.min(150, faceW * 0.58));
+			let stickerX = faceX + faceW + 8;
+			if (stickerX + stickerSize > displayW - 6) {
+				stickerX = faceX - stickerSize - 8;
+			}
+			stickerX = Math.max(6, stickerX);
+			const stickerY = Math.max(6, Math.min(displayH - stickerSize - 6, faceY + faceH * 0.1));
+
+			stickerTarget.x = stickerX;
+			stickerTarget.y = stickerY;
+			stickerTarget.size = stickerSize;
+			stickerTarget.visible = true;
+		}
+
+		function seedMoodParticles(mood) {
+			if (!moodEffectsEnabled) {
+				return;
+			}
+
+			moodParticles = [];
+			if (mood === "happy") {
+				return;
+			}
+
+			if (mood === "angry") {
+				const count = Math.floor(95 * moodDensity);
+				for (let i = 0; i < count; i += 1) {
+					moodParticles.push({
+						x: randomBetween(0, viewportWidth),
+						y: randomBetween(viewportHeight * 0.65, viewportHeight + 40),
+						vy: randomBetween(1.2, 2.8),
+						vx: randomBetween(-0.35, 0.35),
+						size: randomBetween(5, 11),
+						life: randomBetween(0.25, 1),
+						heat: randomBetween(0.3, 1),
+						phase: randomBetween(0, Math.PI * 2)
+					});
+				}
+				return;
+			}
+
+			if (mood === "sad") {
+				const count = Math.floor(170 * moodDensity);
+				for (let i = 0; i < count; i += 1) {
+					moodParticles.push({
+						x: randomBetween(0, viewportWidth),
+						y: randomBetween(-viewportHeight, viewportHeight),
+						vy: randomBetween(5.8, 9.8),
+						len: randomBetween(10, 20),
+						alpha: randomBetween(0.18, 0.55)
+					});
+				}
+				return;
+			}
+
+			if (mood === "neutral") {
+				const count = Math.floor(28 * moodDensity);
+				for (let i = 0; i < count; i += 1) {
+					moodParticles.push({
+						x: randomBetween(0, viewportWidth),
+						y: randomBetween(-viewportHeight, viewportHeight),
+						vy: randomBetween(0.45, 1.25),
+						vx: randomBetween(-0.5, 0.5),
+						size: randomBetween(10, 18),
+						wobble: randomBetween(0.015, 0.05),
+						phase: randomBetween(0, Math.PI * 2)
+					});
+				}
+			}
+		}
+
+		function createPineappleSprite() {
+			const sprite = document.createElement("canvas");
+			sprite.width = 36;
+			sprite.height = 46;
+			const ctx = sprite.getContext("2d");
+
+			ctx.translate(18, 24);
+			ctx.fillStyle = "rgba(247, 198, 61, 0.9)";
+			ctx.beginPath();
+			ctx.ellipse(0, 0, 12, 15, 0, 0, Math.PI * 2);
+			ctx.fill();
+
+			ctx.strokeStyle = "rgba(208, 148, 34, 0.72)";
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			ctx.moveTo(-7, -10);
+			ctx.lineTo(7, 10);
+			ctx.moveTo(7, -10);
+			ctx.lineTo(-7, 10);
+			ctx.stroke();
+
+			ctx.fillStyle = "rgba(76, 175, 80, 0.92)";
+			ctx.beginPath();
+			ctx.moveTo(0, -22);
+			ctx.lineTo(4, -14);
+			ctx.lineTo(0, -16);
+			ctx.lineTo(-4, -14);
+			ctx.closePath();
+			ctx.fill();
+
+			return sprite;
+		}
+
+		function drawPineapple(x, y, size) {
+			if (!pineappleSprite) {
+				pineappleSprite = createPineappleSprite();
+			}
+
+			const scale = size / 14;
+			const width = pineappleSprite.width * scale;
+			const height = pineappleSprite.height * scale;
+			moodCtx.drawImage(pineappleSprite, x - width * 0.5, y - height * 0.5, width, height);
+		}
+
+		function renderMoodEffects() {
+			if (!moodEffectsEnabled) {
+				return;
+			}
+
+			if (!moodEffectsActive) {
+				return;
+			}
+
+			const now = performance.now();
+			if (now - moodLastRender < 1000 / moodFps) {
+				moodFrameId = requestAnimationFrame(renderMoodEffects);
+				return;
+			}
+			moodLastRender = now;
+
+			moodCtx.clearRect(0, 0, viewportWidth, viewportHeight);
+
+			if (currentMood === "angry") {
+				for (const p of moodParticles) {
+					p.y -= p.vy;
+					p.x += p.vx + Math.sin(now * 0.01 + p.phase) * 0.2;
+					p.life -= 0.02;
+
+					if (p.y < -20 || p.life <= 0) {
+						p.x = randomBetween(0, viewportWidth);
+						p.y = randomBetween(viewportHeight * 0.7, viewportHeight + 30);
+						p.life = randomBetween(0.35, 1);
+					}
+
+					moodCtx.globalAlpha = p.life * 0.8;
+					moodCtx.fillStyle = p.heat > 0.68 ? "#ff7043" : p.heat > 0.45 ? "#ff9800" : "#ffd54f";
+					moodCtx.fillRect(p.x, p.y, p.size, p.size * 1.5);
+				}
+			}
+
+			if (currentMood === "sad") {
+				for (const p of moodParticles) {
+					p.y += p.vy;
+					if (p.y > viewportHeight + 24) {
+						p.y = -24;
+						p.x = randomBetween(0, viewportWidth);
+					}
+
+					moodCtx.globalAlpha = p.alpha;
+					moodCtx.fillStyle = "#8ecae6";
+					moodCtx.fillRect(p.x, p.y, 1.2, p.len);
+				}
+			}
+
+			if (currentMood === "neutral") {
+				for (const p of moodParticles) {
+					p.y += p.vy;
+					p.phase += p.wobble;
+					p.x += p.vx + Math.sin(p.phase) * 0.3;
+
+					if (p.y > viewportHeight + 30) {
+						p.y = -30;
+						p.x = randomBetween(0, viewportWidth);
+					}
+
+					moodCtx.globalAlpha = 0.78;
+					drawPineapple(p.x, p.y, p.size);
+				}
+			}
+
+			moodCtx.globalAlpha = 1;
+			moodFrameId = requestAnimationFrame(renderMoodEffects);
+		}
+
+		function startMoodEffects() {
+			if (!moodEffectsEnabled) {
+				return;
+			}
+
+			if (currentMood === "happy") {
+				stopMoodEffects();
+				return;
+			}
+
+			if (moodEffectsActive) {
+				return;
+			}
+			moodEffectsActive = true;
+			seedMoodParticles(currentMood);
+			renderMoodEffects();
+		}
+
+		function stopMoodEffects() {
+			moodEffectsActive = false;
+			if (moodFrameId) {
+				cancelAnimationFrame(moodFrameId);
+				moodFrameId = null;
+			}
+			moodParticles = [];
+			if (moodCtx) {
+				moodCtx.clearRect(0, 0, viewportWidth, viewportHeight);
+			}
+		}
+
+		function triggerHappyCelebration() {
+			if (!celebrationEnabled) {
+				return;
+			}
+
+			const now = Date.now();
+			// Cooldown avoids retriggering every detection frame.
+			if (fxRunning || now - lastHappyCelebrationAt < 1600) {
+				return;
+			}
+
+			lastHappyCelebrationAt = now;
+			fxRunning = true;
+
+			const confetti = [];
+			const sparks = [];
+			const glitter = [];
+			const gravity = 0.08;
+			const durationMs = Math.round(2200 * effectQuality + 700);
+			const startAt = performance.now();
+			let frameCount = 0;
+			let previousRenderTime = 0;
+			const confettiCount = Math.floor(340 * effectQuality + 70);
+			const glitterCount = Math.floor(420 * effectQuality + 60);
+			const sparkSegments = Math.floor(70 * effectQuality + 26);
+
+			for (let i = 0; i < confettiCount; i += 1) {
+				confetti.push({
+					x: randomBetween(0, window.innerWidth),
+					y: randomBetween(-window.innerHeight * 0.5, -8),
+					vx: randomBetween(-2.3, 2.3),
+					vy: randomBetween(1.5, 4.2),
+					size: randomBetween(3, 8),
+					spin: randomBetween(-0.18, 0.18),
+					angle: randomBetween(0, Math.PI * 2),
+					color: confettiColors[Math.floor(Math.random() * confettiColors.length)]
+				});
+			}
+
+			for (let i = 0; i < glitterCount; i += 1) {
+				glitter.push({
+					x: randomBetween(0, window.innerWidth),
+					y: randomBetween(0, window.innerHeight),
+					vx: randomBetween(-0.35, 0.35),
+					vy: randomBetween(-0.2, 0.85),
+					r: randomBetween(0.8, 2.4),
+					phase: randomBetween(0, Math.PI * 2),
+					pulse: randomBetween(0.03, 0.08),
+					alpha: randomBetween(0.18, 0.75),
+					color: confettiColors[Math.floor(Math.random() * confettiColors.length)]
+				});
+			}
+
+			const fireworkOrigins = [
+				{ x: window.innerWidth * 0.18, y: window.innerHeight * 0.34 },
+				{ x: window.innerWidth * 0.5, y: window.innerHeight * 0.24 },
+				{ x: window.innerWidth * 0.82, y: window.innerHeight * 0.34 }
+			];
+
+			function spawnFireworks() {
+				for (const origin of fireworkOrigins) {
+					for (let i = 0; i < sparkSegments; i += 1) {
+						const segments = sparkSegments;
+						const angle = (Math.PI * 2 * i) / segments;
+						const speed = randomBetween(1.2, 3.9);
+						sparks.push({
+							x: origin.x,
+							y: origin.y,
+							vx: Math.cos(angle) * speed,
+							vy: Math.sin(angle) * speed,
+							alpha: 1,
+							life: randomBetween(38, 72),
+							color: confettiColors[Math.floor(Math.random() * confettiColors.length)]
+						});
+					}
+				}
+			}
+
+			spawnFireworks();
+
+			function frame(nowTime) {
+				if (nowTime - previousRenderTime < 1000 / 30) {
+					fxFrameId = requestAnimationFrame(frame);
+					return;
+				}
+				previousRenderTime = nowTime;
+				frameCount += 1;
+				fxCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+				fxCtx.globalCompositeOperation = "source-over";
+
+				// Draw glitter every other frame to cut render cost while keeping sparkle density.
+				if (frameCount % 2 === 0) {
+					for (const glint of glitter) {
+						glint.x += glint.vx;
+						glint.y += glint.vy;
+						glint.phase += glint.pulse;
+
+						if (glint.x < 0) glint.x = window.innerWidth;
+						if (glint.x > window.innerWidth) glint.x = 0;
+						if (glint.y > window.innerHeight + 2) glint.y = -2;
+
+						const twinkle = (Math.sin(glint.phase) + 1) * 0.5;
+						fxCtx.globalAlpha = glint.alpha * (0.35 + twinkle * 0.9);
+						fxCtx.fillStyle = glint.color;
+						const twinkleSize = glint.r + twinkle;
+						fxCtx.fillRect(glint.x, glint.y, twinkleSize, twinkleSize);
+					}
+				}
+
+				for (const piece of confetti) {
+					piece.x += piece.vx;
+					piece.y += piece.vy;
+					piece.vy += gravity * 0.35;
+					piece.angle += piece.spin;
+
+					fxCtx.save();
+					fxCtx.globalAlpha = 0.92;
+					fxCtx.translate(piece.x, piece.y);
+					fxCtx.rotate(piece.angle);
+					fxCtx.fillStyle = piece.color;
+					fxCtx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size * 0.62);
+					fxCtx.restore();
+				}
+
+				for (let i = sparks.length - 1; i >= 0; i -= 1) {
+					const spark = sparks[i];
+					spark.x += spark.vx;
+					spark.y += spark.vy;
+					spark.vy += gravity * 0.45;
+					spark.life -= 1;
+					spark.alpha = Math.max(spark.life / 80, 0);
+
+					fxCtx.globalAlpha = spark.alpha;
+					fxCtx.fillStyle = spark.color;
+					fxCtx.fillRect(spark.x, spark.y, 2.2, 2.2);
+
+					if (spark.life <= 0) {
+						sparks.splice(i, 1);
+					}
+				}
+
+				fxCtx.globalAlpha = 1;
+				fxCtx.shadowBlur = 0;
+				fxCtx.globalCompositeOperation = "source-over";
+
+				if (nowTime - startAt < durationMs) {
+					fxFrameId = requestAnimationFrame(frame);
+				} else {
+					fxCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+					fxRunning = false;
+					fxFrameId = null;
+				}
+			}
+
+			fxFrameId = requestAnimationFrame(frame);
+		}
+
+		function updateScreenFlashCutout() {
+			// Keep flash white everywhere except the camera preview rectangle.
+			const rect = videoWrap.getBoundingClientRect();
+			screenFlash.style.left = `${Math.round(rect.left)}px`;
+			screenFlash.style.top = `${Math.round(rect.top)}px`;
+			screenFlash.style.width = `${Math.round(rect.width)}px`;
+			screenFlash.style.height = `${Math.round(rect.height)}px`;
+			screenFlash.style.borderRadius = getComputedStyle(videoWrap).borderRadius;
+		}
+
+		function toggleFlash() {
+			if (!camera.srcObject) {
+				statusLabel.textContent = "Start camera first to use flash.";
+				return;
+			}
+
+			updateScreenFlashCutout();
+
+			// Use a white screen overlay as a monitor light source near the face.
+			isScreenFlashOn = !isScreenFlashOn;
+			document.body.classList.toggle("screen-flash-on", isScreenFlashOn);
+
+			// Pair overlay with local video boost so expression details stand out.
+			usingLightBoost = !usingLightBoost;
+			camera.classList.toggle("light-boost", usingLightBoost);
+
+			flashBtn.textContent = isScreenFlashOn ? "Screen Flash: On" : "Screen Flash: Off";
+			statusLabel.textContent = isScreenFlashOn
+				? "Screen flash enabled (color-preserving). Keep your face 20-40 cm from the display."
+				: "Screen flash disabled.";
+		}
+
+		function applyCameraInversion() {
+			if (isCameraInverted) {
+				camera.classList.add("inverted");
+				invertBtn.textContent = "Inverted: On";
+			} else {
+				camera.classList.remove("inverted");
+				invertBtn.textContent = "Inverted: Off";
+			}
+		}
+
+		function pickDominantEmotion(expressions) {
+			// Angry is often split between angry/disgusted in this model, so combine both.
+			const emotionScores = {
+				happy: expressions.happy ?? 0,
+				sad: expressions.sad ?? 0,
+				neutral: expressions.neutral ?? 0,
+				angry: Math.max(
+					expressions.angry ?? 0,
+					(expressions.angry ?? 0) * 0.7 + (expressions.disgusted ?? 0) * 0.9
+				)
+			};
+
+			// Find the strongest score among the requested emotion set.
+			let bestEmotion = "neutral";
+			let bestScore = 0;
+
+			for (const emotion of trackedEmotions) {
+				const score = emotionScores[emotion] ?? 0;
+				if (score > bestScore) {
+					bestScore = score;
+					bestEmotion = emotion;
+				}
+			}
+
+			return { emotion: bestEmotion, score: bestScore };
+		}
+
+		function calculateBeautyScore(detection) {
+			// This is a playful on-camera presentation score, not an objective beauty measure.
+			const expressions = detection.expressions || {};
+			const box = detection.detection?.box;
+
+			const happy = expressions.happy ?? 0;
+			const neutral = expressions.neutral ?? 0;
+			const angry = expressions.angry ?? 0;
+			const sad = expressions.sad ?? 0;
+
+			let framingScore = 0.5;
+			let centerScore = 0.5;
+
+			if (box && camera.videoWidth && camera.videoHeight) {
+				const areaRatio = (box.width * box.height) / (camera.videoWidth * camera.videoHeight);
+				framingScore = Math.max(0, Math.min(1, areaRatio / 0.24));
+
+				const faceCenterX = box.x + box.width / 2;
+				const faceCenterY = box.y + box.height / 2;
+				const dx = Math.abs(faceCenterX - camera.videoWidth / 2) / (camera.videoWidth / 2);
+				const dy = Math.abs(faceCenterY - camera.videoHeight / 2) / (camera.videoHeight / 2);
+				centerScore = Math.max(0, 1 - (dx + dy) * 0.5);
+			}
+
+			const rawScore =
+				44 +
+				happy * 34 +
+				neutral * 12 +
+				framingScore * 16 +
+				centerScore * 10 -
+				angry * 11 -
+				sad * 9;
+
+			return Math.round(Math.max(1, Math.min(99, rawScore)));
+		}
+
+		function runBeautyScan() {
+			if (!camera.srcObject) {
+				statusLabel.textContent = "Start camera first for Beauty Scanner.";
+				return;
+			}
+
+			if (!latestFaceDetection) {
+				statusLabel.textContent = "No face ready to scan. Look at camera and hold still.";
+				beautyLabel.textContent = "Beauty Score: --%";
+				return;
+			}
+
+			const score = calculateBeautyScore(latestFaceDetection);
+			beautyLabel.textContent = `Beauty Score: ${score}%`;
+			statusLabel.textContent = "Beauty scan completed.";
+		}
+
+		function setMood(emotion, score) {
+			if (emotion !== currentMood) {
+				currentMood = emotion;
+				// Remove all mood classes and add the new one
+				document.body.classList.remove('mood-happy', 'mood-sad', 'mood-neutral', 'mood-angry');
+				document.body.classList.add(`mood-${emotion}`);
+				
+				if (!moodEffectsEnabled) {
+					stopMoodEffects();
+				} else if (emotion === "happy") {
+					stopMoodEffects();
+				} else if (!moodEffectsActive && camera.srcObject) {
+					startMoodEffects();
+				} else if (moodEffectsActive) {
+					seedMoodParticles(emotion);
+				}
+			}
+
+			emotionLabel.textContent = emotion.toUpperCase();
+			confidenceLabel.textContent = `Confidence: ${Math.round(score * 100)}%`;
+		}
+
+		function startDetectionLoop() {
+			if (detectionTimer) {
+				clearTimeout(detectionTimer);
+			}
+			detectionActive = true;
+
+			const runDetection = async () => {
+				if (!detectionActive) {
+					return;
+				}
+
+				if (document.hidden || fxRunning || detectionInFlight || camera.readyState < 2) {
+					detectionTimer = setTimeout(runDetection, detectorIntervalMs + 140);
+					return;
+				}
+
+				detectionInFlight = true;
+
+				try {
+					detectionTick += 1;
+					let detection = await faceapi
+						.detectSingleFace(camera, tinyDetectorOptions)
+						.withFaceExpressions();
+
+					// Run heavier SSD detection occasionally or when face was recently lost.
+					if (!detection && (noFaceStreak >= 2 || detectionTick % 5 === 0)) {
+						detection = await faceapi
+							.detectSingleFace(camera, ssdDetectorOptions)
+							.withFaceExpressions();
+					}
+
+					faceCountLabel.textContent = detection ? "Faces: 1" : "Faces: 0";
+
+					if (!detection) {
+						noFaceStreak += 1;
+						latestFaceDetection = null;
+						hideEmotionSticker();
+						if (noFaceStreak >= 3) {
+							statusLabel.textContent = "No face detected. Face camera directly and improve lighting.";
+							setMood("neutral", 0);
+						}
+						return;
+					}
+
+					noFaceStreak = 0;
+					latestFaceDetection = detection;
+					const picked = pickDominantEmotion(detection.expressions);
+
+					// Slightly lower threshold for angry because it is commonly under-confident.
+					const minScore = picked.emotion === "angry" ? 0.14 : 0.18;
+					if (picked.score < minScore) {
+						statusLabel.textContent = "Face found, but expression is unclear. Increase lighting or exaggerate expression.";
+						return;
+					}
+					const smoothed = smoothEmotion(picked.emotion, picked.score);
+					setMood(smoothed.emotion, smoothed.score);
+					updateEmotionSticker(smoothed.emotion, detection);
+					if (celebrationEnabled && smoothed.emotion === "happy" && smoothed.score >= 0.45) {
+						triggerHappyCelebration();
+					}
+					statusLabel.textContent = `Detected emotion: ${smoothed.emotion}`;
+				} catch (error) {
+					statusLabel.textContent = `Detection error: ${error.message}`;
+				} finally {
+					detectionInFlight = false;
+					if (detectionActive) {
+						detectionTimer = setTimeout(runDetection, detectorIntervalMs);
+					}
+				}
+			};
+
+			runDetection();
+		}
+
+		startBtn.addEventListener("click", startCamera);
+		stopBtn.addEventListener("click", stopCamera);
+		invertBtn.addEventListener("click", () => {
+			isCameraInverted = !isCameraInverted;
+			applyCameraInversion();
+			if (latestFaceDetection) {
+				updateEmotionSticker(currentMood, latestFaceDetection);
+			}
+		});
+		flashBtn.addEventListener("click", () => {
+			toggleFlash();
+		});
+		beautyBtn.addEventListener("click", () => {
+			runBeautyScan();
+		});
+		window.addEventListener("resize", () => {
+			updateScreenFlashCutout();
+			if (latestFaceDetection) {
+				updateEmotionSticker(currentMood, latestFaceDetection);
+			}
+			resizeMoodCanvas();
+			if (moodEffectsActive) {
+				seedMoodParticles(currentMood);
+			}
+			resizeFxCanvas();
+		});
+		window.addEventListener("visibilitychange", () => {
+			if (document.hidden) {
+				stopMoodEffects();
+				return;
+			}
+
+			if (moodEffectsEnabled && camera.srcObject && currentMood !== "happy") {
+				startMoodEffects();
+			}
+		});
+		applyCameraInversion();
+		updateScreenFlashCutout();
+		resizeMoodCanvas();
+		resizeFxCanvas();
+
+		// Load models at startup, then user can enable camera when ready.
+		loadModels().catch((error) => {
+			statusLabel.textContent = `Model loading failed: ${error.message}`;
+		});
+	</script>
+</body>
+</html>
