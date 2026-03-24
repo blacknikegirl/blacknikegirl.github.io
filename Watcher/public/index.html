@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Motion Sound Watcher</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1 class="title">Motion Sound Watcher</h1>
+          <p class="subtitle">Real-time motion detection with directional audio feedback</p>
+        </div>
+      </header>
+
+      <!-- Main Content Grid -->
+      <div class="content-grid">
+        <!-- Left Panel: Controls -->
+        <aside class="left-panel">
+          <!-- Camera Controls -->
+          <section class="card control-card">
+            <h2 class="card-title">Camera</h2>
+            <div class="button-group">
+              <button id="startBtn" type="button" class="btn btn-primary">
+                <span class="icon">▶</span> Start
+              </button>
+              <button id="stopBtn" type="button" class="btn btn-secondary" disabled>
+                <span class="icon">⏹</span> Stop
+              </button>
+            </div>
+            <button id="testSoundBtn" type="button" class="btn btn-accent full-width">
+              <span class="icon">🔊</span> Test Sound
+            </button>
+          </section>
+
+          <!-- Live Stats -->
+          <section class="card stats-card">
+            <h2 class="card-title">Status</h2>
+            <div class="stat-item">
+              <span class="stat-label">Detection</span>
+              <span class="stat-value" id="statusText">Idle</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Direction</span>
+              <span class="stat-value" id="directionText">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Motion</span>
+              <span class="stat-value" id="motionText">0 px</span>
+            </div>
+          </section>
+
+          <!-- Quick Settings -->
+          <section class="card settings-card">
+            <h2 class="card-title">Effects</h2>
+            <div class="toggle-grid">
+              <label class="toggle-label">
+                <input type="checkbox" id="effectSpeedAnalysis" checked />
+                <span>Speed</span>
+              </label>
+              <label class="toggle-label">
+                <input type="checkbox" id="effectEcho" checked />
+                <span>Echo</span>
+              </label>
+              <label class="toggle-label">
+                <input type="checkbox" id="effectDiagonal" checked />
+                <span>Diagonal</span>
+              </label>
+              <label class="toggle-label">
+                <input type="checkbox" id="effectCombo" checked />
+                <span>Combo</span>
+              </label>
+              <label class="toggle-label">
+                <input type="checkbox" id="effectVisualBlast" checked />
+                <span>Blast</span>
+              </label>
+              <label class="toggle-label">
+                <input type="checkbox" id="effectIntensity" checked />
+                <span>Meter</span>
+              </label>
+            </div>
+          </section>
+
+          <!-- Sensitivity -->
+          <section class="card">
+            <h2 class="card-title">Sensitivity</h2>
+            <div class="slider-container">
+              <input type="range" id="sensitivitySlider" min="50" max="200" value="100" class="slider" />
+              <div class="slider-value"><span id="sensitivityValue">100%</span></div>
+            </div>
+          </section>
+        </aside>
+
+        <!-- Right Panel: Video & Feedback -->
+        <section class="right-panel">
+          <!-- Video Container -->
+          <div class="video-container">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="overlay"></canvas>
+            <div id="reactionFlash" class="reaction-flash" aria-hidden="true"></div>
+            <div id="reactionArrow" class="reaction-arrow" aria-hidden="true"></div>
+            <div id="intensityBar" class="intensity-bar" aria-hidden="true">
+              <div id="intensityFill" class="intensity-fill"></div>
+            </div>
+            <div id="intensityLabel" class="intensity-label">Motion</div>
+          </div>
+
+          <!-- Info Footer -->
+          <div class="info-footer">
+            <p id="audioHint">Press Test Sound to verify audio output.</p>
+            <p class="hint-text">
+              Move clearly in one direction for best detection. Customize sounds in <code>/sounds</code>
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
