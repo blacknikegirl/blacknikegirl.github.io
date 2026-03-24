@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Purr - The Ultimate Cat Browser</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="logo">
+          <span class="logo-icon">🐱</span>
+          <h1>Purr</h1>
+        </div>
+        <div class="nav-actions">
+          <button id="themeToggleBtn" class="nav-btn nav-theme-btn" title="Toggle theme">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <h2>Discover Magnificent Cats</h2>
+      <p>Explore the world's most beautiful and unique cat breeds</p>
+      <img src="./cats.png" alt="Cats" />
+    </section>
+
+    <!-- Main Container -->
+    <main class="main-container">
+      <!-- Control Panel -->
+      <aside class="search-panel">
+        <div class="search-box">
+          <input 
+            id="searchInput" 
+            type="text" 
+            placeholder="Search by breed name..." 
+            class="search-input" 
+            aria-label="Search cat breeds"
+          />
+          <span class="search-icon">🔍</span>
+        </div>
+
+        <div class="filter-group">
+          <button id="loadCatsBtn" class="btn btn-primary btn-full">
+            <span>Load All Cats</span>
+            <span class="loader hidden"></span>
+          </button>
+          <button id="showRandomCatBtn" class="btn btn-secondary">🎲 Random Cat</button>
+          <button id="showFavoritesBtn" class="btn btn-secondary">❤️ Favorites</button>
+          <button id="loadMoreBtn" class="btn btn-secondary hidden">Load More</button>
+        </div>
+
+        <div id="statusMessage" class="status-message" aria-live="polite"></div>
+      </aside>
+
+      <!-- Cats Grid -->
+      <section class="content">
+        <div id="catsContainer" class="cats-grid"></div>
+      </section>
+    </main>
+
+    <!-- Modal for Cat Details -->
+    <div id="catModal" class="modal hidden">
+      <div class="modal-content">
+        <button id="closeModal" class="modal-close">&times;</button>
+        <div class="modal-body">
+          <div class="modal-image">
+            <img id="modalCatImage" src="" alt="Cat breed" />
+          </div>
+          <div class="modal-info">
+            <h2 id="modalCatName"></h2>
+            <button id="modalFavoriteBtn" class="btn-favorite">♡ Add to Favorites</button>
+            <div class="cat-details">
+              <div class="detail-group">
+                <span class="detail-label">Origin:</span>
+                <span id="modalCatOrigin"></span>
+              </div>
+              <div class="detail-group">
+                <span class="detail-label">Life Span:</span>
+                <span id="modalCatLifespan"></span>
+              </div>
+              <div class="detail-group">
+                <span class="detail-label">Temperament:</span>
+                <p id="modalCatTemperament"></p>
+              </div>
+              <div class="detail-group">
+                <span class="detail-label">Description:</span>
+                <p id="modalCatDescription"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

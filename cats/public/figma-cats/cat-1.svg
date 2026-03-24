@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450">
+  <defs>
+    <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd6a5"/>
+      <stop offset="100%" stop-color="#ffadad"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="450" fill="url(#bg1)"/>
+  <circle cx="300" cy="220" r="120" fill="#fff" opacity="0.85"/>
+  <path d="M220 140 L255 70 L285 145 Z" fill="#fff" opacity="0.9"/>
+  <path d="M380 140 L345 70 L315 145 Z" fill="#fff" opacity="0.9"/>
+  <circle cx="260" cy="215" r="12" fill="#1f2937"/>
+  <circle cx="340" cy="215" r="12" fill="#1f2937"/>
+  <polygon points="300,240 285,260 315,260" fill="#f97316"/>
+  <text x="300" y="390" font-size="34" text-anchor="middle" fill="#1f2937" font-family="Verdana">Custom Cat 1</text>
+</svg>
