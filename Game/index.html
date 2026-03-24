@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!-- Memory Card Game - Coursme -->
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">  
+    <title>Memory Card Game</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <!-- Name Input Modal -->
+    <div class="modal-overlay" id="nameModal">
+      <div class="modal-content">
+        <h2>Welcome to Memory Card Game!</h2>
+        <p>Please enter your name to get started:</p>
+        <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="20">
+        <div class="modal-buttons">
+          <button class="btn-new-game" id="newGameBtn">New Game</button>
+          <button class="btn-continue" id="continueBtn" style="display: none;">Continue Previous Game</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level Selection Modal -->
+    <div class="modal-overlay" id="levelModal" style="display: none;">
+      <div class="modal-content">
+        <h2>Select Your Level</h2>
+        <p>Choose a difficulty to start:</p>
+        <div class="level-buttons">
+          <button class="level-btn" data-level="1">
+            <span class="level-title">Level 1</span>
+            <span class="level-info">3 Pairs • 10 sec</span>
+          </button>
+          <button class="level-btn" data-level="2">
+            <span class="level-title">Level 2</span>
+            <span class="level-info">4 Pairs • 15 sec</span>
+          </button>
+          <button class="level-btn" data-level="3">
+            <span class="level-title">Level 3</span>
+            <span class="level-info">5 Pairs • 20 sec</span>
+          </button>
+          <button class="level-btn" data-level="4">
+            <span class="level-title">Level 4</span>
+            <span class="level-info">6 Pairs • 25 sec</span>
+          </button>
+          <button class="level-btn" data-level="5">
+            <span class="level-title">Level 5</span>
+            <span class="level-info">7 Pairs • 30 sec</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div class="modal-overlay" id="winModal" style="display: none;">
+      <div class="win-modal-content">
+        <div class="win-header">
+          <h2>🎉 Level Complete! 🎉</h2>
+        </div>
+        <div class="win-body">
+          <p class="congratulations">Congratulations <span id="winPlayerName">Player</span>!</p>
+          <div class="win-stats">
+            <div class="stat-item">
+              <span class="stat-label">Level Completed:</span>
+              <span class="stat-value" id="completedLevel">1</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Total Flips:</span>
+              <span class="stat-value" id="completedFlips">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Time Remaining:</span>
+              <span class="stat-value" id="completedTime">0</span>s
+            </div>
+          </div>
+        </div>
+        <div class="win-footer">
+          <button class="btn-next-level" id="nextLevelBtn">Continue to Level 2</button>
+          <button class="btn-home" id="homeBtn">Home</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scream Overlay -->
+    <div class="scream-overlay" id="screamOverlay" style="display: none;">
+      <img src="images/scream.png" alt="scream" class="scream-image">
+    </div>
+
+    <!-- Lose Modal -->
+    <div class="modal-overlay" id="loseModal" style="display: none;">
+      <div class="lose-modal-content">
+        <div class="lose-header">
+          <h2>😱 Game Over! 😱</h2>
+        </div>
+        <div class="lose-body">
+          <p class="lose-message">Time's up, <span id="losePlayerName">Player</span>!</p>
+          <p class="lose-details">You ran out of time on Level <span id="loseLevel">1</span></p>
+        </div>
+        <div class="lose-footer">
+          <button class="btn-try-again" id="tryAgainBtn">Try Again</button>
+          <button class="btn-home-lose" id="homeBtn2">Home</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="side-image-left">
+        <img src="images/skebob.jpeg" alt="Skebob">
+      </div>
+      
+      <div class="game-content">
+        <div class="header">
+          <h1>Memory Card Game</h1>
+          <p class="subtitle" id="playerGreeting">Test your memory skills!</p>
+          <p class="level-display" id="levelDisplay" style="display: none;">Level <span id="currentLevel">1</span></p>
+        </div>
+        <div class="wrapper">
+          <ul class="cards" id="cardsContainer">
+          </ul>
+          <div class="details">
+            <p class="time">Time: <span><b>20</b>s</span></p>
+            <p class="flips">Flips: <span><b>0</b></span></p>
+            <button>Refresh</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="side-image-right">
+        <img src="images/ronaldo.jpg" alt="Ronaldo">
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+    
+  </body>
+</html>
