@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Wars Databank - Elite Database</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-empire"></i>
+                <span>DATABANK</span>
+            </div>
+            <button class="sidebar-close" id="sidebarClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3 class="nav-title">DATABASES</h3>
+                <button class="nav-item active" data-category="characters">
+                    <i class="fas fa-user-secret"></i>
+                    <span>Characters</span>
+                </button>
+                <button class="nav-item" data-category="locations">
+                    <i class="fas fa-map-location-dot"></i>
+                    <span>Locations</span>
+                </button>
+                <button class="nav-item" data-category="species">
+                    <i class="fas fa-dna"></i>
+                    <span>Species</span>
+                </button>
+                <button class="nav-item" data-category="vehicles">
+                    <i class="fas fa-spaceship"></i>
+                    <span>Vehicles</span>
+                </button>
+                <button class="nav-item" data-category="droids">
+                    <i class="fas fa-robot"></i>
+                    <span>Droids</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Top Bar -->
+        <header class="top-bar">
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="top-bar-title">
+                <h1>ELITE DATABASE</h1>
+                <p>Star Wars Archive</p>
+            </div>
+            <div class="top-bar-info">
+                <span class="entry-count">
+                    <i class="fas fa-database"></i>
+                    <span id="totalCount">0</span> entries
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <main class="main-container">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <div class="hero-content">
+                    <h2>Access the Galaxy's Most Comprehensive Database</h2>
+                    <p>Real-time data from the Star Wars Universe</p>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="charCount">0</span>
+                            <span class="stat-label">Characters</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="locCount">0</span>
+                            <span class="stat-label">Locations</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="vehCount">0</span>
+                            <span class="stat-label">Vehicles</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Controls Section -->
+            <section class="controls-section">
+                <div class="controls-left">
+                    <label class="cards-per-page" for="cardsPerPage">
+                        <span>Items per page</span>
+                        <select id="cardsPerPage">
+                            <option value="6">6</option>
+                            <option value="9" selected>9</option>
+                            <option value="12">12</option>
+                            <option value="15">15</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="status-display">
+                    <p id="statusText">Showing Characters - Page 1</p>
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loading" class="loading-state hidden">
+                <div class="spinner"></div>
+                <p>Loading data from archive...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error" class="error-state hidden">
+                <i class="fas fa-triangle-exclamation"></i>
+                <p id="errorMessage"></p>
+            </div>
+
+            <!-- Cards Grid -->
+            <section class="cards-section">
+                <div class="cards-grid" id="cardsGrid">
+                    <!-- Cards will be populated here -->
+                </div>
+            </section>
+
+            <!-- Pagination Controls -->
+            <div class="pagination-section">
+                <button class="pagination-btn" id="prevBtn">
+                    <i class="fas fa-chevron-left"></i>
+                    <span>Previous</span>
+                </button>
+                <span class="page-info" id="pageInfo">Page 1</span>
+                <button class="pagination-btn" id="nextBtn">
+                    <span>Next</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>&copy; 2024 Star Wars Elite Database. Powered by SWAPI</p>
+        </footer>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" title="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script src="app.js"></script>
+</body>
+</html>
