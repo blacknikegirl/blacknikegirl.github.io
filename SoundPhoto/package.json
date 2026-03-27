@@ -1,0 +1,10 @@
+{
+  "name": "photo-music-dj",
+  "version": "1.0.0",
+  "description": "Photo-driven music generator UI with Node static hosting",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}

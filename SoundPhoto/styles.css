@@ -1,0 +1,548 @@
+/* ========================================
+   Photo Music DJ - Beautiful Design
+   ======================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ========================================
+   Color Variables & Gradients
+   ======================================== */
+
+:root {
+  --primary: #667eea;
+  --secondary: #764ba2;
+  --accent: #f093fb;
+  --success: #4facfe;
+  --warning: #fa709a;
+  --text-dark: #2d3748;
+  --text-light: #718096;
+  --bg-light: #f7fafc;
+  --bg-dark: #1a202c;
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   Body & Main Layout
+   ======================================== */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: var(--text-dark);
+  padding: 20px;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  padding: 40px;
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   Typography
+   ======================================== */
+
+h1 {
+  font-size: 2.5em;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+h2 {
+  font-size: 1.5em;
+  color: var(--text-dark);
+  margin: 25px 0 15px 0;
+  font-weight: 600;
+}
+
+p {
+  color: var(--text-light);
+  text-align: center;
+  font-size: 1.05em;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+/* ========================================
+   Sections - Spacing & Styling
+   ======================================== */
+
+section {
+  margin-bottom: 35px;
+  padding: 25px;
+  background: var(--bg-light);
+  border-radius: 15px;
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+section:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ========================================
+   Upload Panel
+   ======================================== */
+
+.upload-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.drop-area {
+  width: 100%;
+  min-height: 120px;
+  border: 3px dashed var(--primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
+  transition: var(--transition);
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 1.1em;
+}
+
+.drop-area:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.drop-area input {
+  display: none;
+}
+
+#imageCanvas {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--border-color);
+}
+
+/* ========================================
+   Analysis Section
+   ======================================== */
+
+.analysis {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.status-text {
+  font-weight: 600;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  margin: 15px 0;
+  color: var(--primary);
+  border-left: 4px solid var(--primary);
+}
+
+.tags {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 0.95em;
+  color: var(--text-dark);
+}
+
+.tags span {
+  background: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  margin-left: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ========================================
+   Buttons - Base Styling
+   ======================================== */
+
+button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Primary Button */
+#analyzeBtn {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  width: 100%;
+  font-size: 1.05em;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+#analyzeBtn:hover {
+  filter: brightness(1.1);
+}
+
+/* Play/Stop Buttons */
+#playBtn {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  color: white;
+  flex: 1;
+}
+
+#stopBtn {
+  background: linear-gradient(135deg, #fa709a, #fee140);
+  color: white;
+  flex: 1;
+}
+
+#playBtn:hover,
+#stopBtn:hover {
+  filter: brightness(1.1);
+}
+
+/* Secondary Buttons */
+#regenerateBtn,
+#saveBtn,
+#loadBtn,
+#downloadWavBtn,
+#downloadJsonBtn,
+#downloadImageBtn {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  flex: 1;
+}
+
+#regenerateBtn:hover,
+#saveBtn:hover,
+#loadBtn:hover,
+#downloadWavBtn:hover,
+#downloadJsonBtn:hover,
+#downloadImageBtn:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* ========================================
+   Controls Section
+   ======================================== */
+
+.controls {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+label {
+  display: flex;
+  align-items: center;
+  margin: 15px 0;
+  font-weight: 500;
+  color: var(--text-dark);
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+select,
+input[type="range"] {
+  padding: 8px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.95em;
+  font-family: inherit;
+  transition: var(--transition);
+  background: white;
+}
+
+select {
+  min-width: 150px;
+  cursor: pointer;
+  color: var(--text-dark);
+  padding: 10px 12px;
+  font-weight: 500;
+}
+
+select:hover,
+select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  outline: none;
+}
+
+input[type="range"] {
+  flex: 1;
+  min-width: 150px;
+  height: 6px;
+  padding: 0;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  border-radius: 10px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--primary);
+  transition: var(--transition);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--primary);
+  transition: var(--transition);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 0 8px rgba(102, 126, 234, 0.2);
+}
+
+/* ========================================
+   Playback Section
+   ======================================== */
+
+.playback {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+/* ========================================
+   Visualizer Canvas
+   ======================================== */
+
+.visualizer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bg-dark), rgba(102, 126, 234, 0.2));
+  border-radius: 15px;
+}
+
+#visualizerCanvas {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   Extra Section
+   ======================================== */
+
+.extra {
+  background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(250, 112, 154, 0.1));
+  border: 2px solid var(--success);
+}
+
+.extra h2 {
+  color: var(--success);
+}
+
+.extra ol {
+  list-style-position: inside;
+  padding-left: 20px;
+}
+
+.extra li {
+  color: var(--text-dark);
+  margin: 10px 0;
+  line-height: 1.6;
+}
+
+.extra li::marker {
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 768px) {
+  main {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  h2 {
+    font-size: 1.2em;
+  }
+
+  .playback {
+    grid-template-columns: 1fr;
+  }
+
+  .drop-area {
+    min-height: 100px;
+  }
+
+  label {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  input[type="range"] {
+    width: 100%;
+  }
+
+  section {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  p {
+    font-size: 0.95em;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  main {
+    padding: 15px;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 1.6em;
+  }
+
+  section {
+    padding: 12px;
+  }
+
+  button {
+    padding: 10px 16px;
+    font-size: 0.85em;
+  }
+
+  .tags {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tags span {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
+
+/* ========================================
+   Focus States & Accessibility
+   ======================================== */
+
+button:focus,
+select:focus,
+input[type="range"]:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   Animation Enhancements
+   ======================================== */
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.6);
+  }
+}
+
+button:hover:not(:active) {
+  animation: glow 1.5s ease-in-out infinite;
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+
+@media print {
+  body {
+    background: white;
+  }
+
+  main {
+    box-shadow: none;
+  }
+
+  button {
+    display: none;
+  }
+}

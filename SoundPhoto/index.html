@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Music DJ</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <h1>Photo Music DJ</h1>
+    <p>Upload a photo, analyze colors and objects, and generate a unique tune.</p>
+
+    <section class="upload-panel">
+      <label class="drop-area" id="dropArea">
+        <input type="file" id="imageInput" accept="image/*" />
+        Drop an image or click to select
+      </label>
+      <canvas id="imageCanvas" width="360" height="360"></canvas>
+    </section>
+
+    <section class="analysis">
+      <button id="analyzeBtn">Analyze & Generate Music</button>
+      <div id="status" class="status-text">Status: waiting to upload</div>
+      <div class="tags">Detected object: <span id="objectLabel">none</span></div>
+      <div class="tags">Average color: <span id="averageColor">none</span></div>
+      <div class="tags">Palette: <span id="palette">none</span></div>
+      <div class="tags">Tempo: <span id="tempoLabel">0</span> BPM</div>
+    </section>
+
+    <section class="controls">
+      <h2>Live Controls</h2>
+      <label>Genre Preset:
+        <select id="genrePreset">
+          <option value="ambient">Ambient</option>
+          <option value="dubstep">Dubstep</option>
+          <option value="jazz">Jazz</option>
+          <option value="chiptune">Chiptune</option>
+          <option value="cinematic">Cinematic</option>
+          <option value="lofi">Lo-fi</option>
+          <option value="rock">Rock</option>
+          <option value="orchestral">Orchestral</option>
+          <option value="trap">Trap</option>
+          <option value="ethnic">Ethnic</option>
+        </select>
+      </label>
+      <label>Reverb: <input id="reverb" type="range" min="0" max="1" step="0.01" value="0.15" /></label>
+      <label>Delay: <input id="delay" type="range" min="0" max="0.5" step="0.01" value="0.1" /></label>
+      <label>Pitch Shift (semitones): <input id="pitchShift" type="range" min="-12" max="12" value="0" /></label>
+      <label>Energy (saturation-based): <input id="energy" type="range" min="0.5" max="2" step="0.05" value="1" /></label>
+    </section>
+
+    <section class="playback">
+      <button id="playBtn">Play</button>
+      <button id="stopBtn">Stop</button>
+      <button id="regenerateBtn">Generate New Melody</button>
+      <button id="saveBtn">Save Song</button>
+      <button id="loadBtn">Load Last</button>
+      <button id="downloadWavBtn">Download WAV</button>
+      <button id="downloadJsonBtn">Download JSON</button>
+      <button id="downloadImageBtn">Download Image</button>
+    </section>
+
+    <section class="visualizer">
+      <canvas id="visualizerCanvas" width="720" height="200"></canvas>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+  <script src="https://unpkg.com/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/colorthief@2.3.2/dist/color-thief.umd.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
